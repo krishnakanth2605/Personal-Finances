@@ -606,6 +606,7 @@ window.addEventListener('error', function(e){
     <button class="navbtn" data-tab="assets"><span class="dot"></span> Assets</button>
     <button class="navbtn" data-tab="savings"><span class="dot"></span> Financial Reserves</button>
     <button class="navbtn" data-tab="loans"><span class="dot"></span> Loans</button>
+    <button class="navbtn" data-tab="budgets"><span class="dot"></span> Budgets</button>
     <button class="navbtn" data-tab="networth"><span class="dot"></span> Net Worth</button>
     <div class="sidebar-foot">
       <div id="driveStatus" style="font-size:11px; color:var(--text-muted); padding: 2px 10px 4px;">Drive: not connected</div>
@@ -805,6 +806,36 @@ window.addEventListener('error', function(e){
 
       <div class="grid-2 section-gap">
         <div class="card" style="grid-column: 1 / -1;">
+          <h3>Portfolio value — contributions vs. current value</h3>
+          <div class="ledger-tape" id="portfolioValueTape"></div>
+          <p style="font-size:11px; color:var(--text-muted); margin:10px 0 0;">Current value uses your latest logged valuation per instrument below; instruments without one yet fall back to what you've contributed.</p>
+        </div>
+      </div>
+
+      <div class="section-gap">
+        <h3 style="font-family:var(--font-display); font-size:18px; font-weight:600; margin:0 0 4px;">Log current value</h3>
+        <p class="tabdesc" style="margin-bottom:14px;">Update this whenever you check a real statement, so Net Worth reflects market value instead of just what you've put in.</p>
+        <form class="form-row" id="valuationForm">
+          <div class="field"><label>Date</label><input type="date" name="date" required></div>
+          <div class="field">
+            <label>Instrument</label>
+            <input type="text" name="instrument" list="investCategories" placeholder="SIP" required>
+          </div>
+          <div class="field"><label>Current value</label><input type="number" name="value" step="0.01" min="0" placeholder="0.00" required></div>
+          <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
+          <button class="btn" type="submit" id="valuationSubmitBtn">Log value</button>
+          <button class="btn secondary" type="button" id="valuationCancelEdit" style="display:none;">Cancel edit</button>
+        </form>
+        <div class="table-wrap">
+          <table id="valuationTable">
+            <thead><tr><th>Date</th><th>Instrument</th><th>Notes</th><th style="text-align:right;">Value</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2 section-gap">
+        <div class="card" style="grid-column: 1 / -1;">
           <h3>Cumulative invested over time</h3>
           <canvas id="chartInvestCumulative"></canvas>
         </div>
@@ -888,6 +919,26 @@ window.addEventListener('error', function(e){
       <div id="loansList"></div>
     </section>
 
+    <!-- BUDGETS -->
+    <section class="tab" id="tab-budgets">
+      <h2 class="tabtitle">Budgets</h2>
+      <p class="tabdesc">Set a monthly target per category and see how this month's spending is tracking against it. Compares against the current month only.</p>
+
+      <div class="tab-summary" id="budgetsSummary"></div>
+
+      <form class="form-row" id="budgetForm">
+        <div class="field">
+          <label>Category</label>
+          <input type="text" name="category" list="expenseCategories" placeholder="Groceries" required>
+        </div>
+        <div class="field"><label>Monthly budget</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
+        <button class="btn" type="submit" id="budgetSubmitBtn">Add budget</button>
+        <button class="btn secondary" type="button" id="budgetCancelEdit" style="display:none;">Cancel edit</button>
+      </form>
+
+      <div id="budgetsList"></div>
+    </section>
+
     <!-- NET WORTH -->
     <section class="tab" id="tab-networth">
       <div class="ledger-hero">
@@ -930,9 +981,11 @@ function defaultData(){
     income: [],
     expenses: [],
     investments: [],
+    investmentValuations: [],
     assets: [],
     reserves: { target: 0, entries: [] },
-    loans: []
+    loans: [],
+    budgets: []
   };
 }
 
@@ -951,6 +1004,8 @@ let editingAssetId = null;
 let editingReserveId = null;
 let editingLoanId = null;
 let editingRepayment = null; // { loanId, repayId }
+let editingValuationId = null;
+let editingBudgetId = null;
 
 let investSearchTerm = '';
 let assetSearchTerm = '';
@@ -1102,12 +1157,22 @@ function monthsForYear(year){
 }
 
 /* ---------------- Derived totals ---------------- */
+// Loan balance is simply opening balance minus repayments logged to date —
+// no interest accrual. Interest/principal handling is left to you, as
+// requested; this only tracks what you've told it was repaid.
+function loanRemainingAt(loan, asOfDateStr){
+  if(!loan.start || loan.start > asOfDateStr) return Math.max(0, Number(loan.opening)||0);
+  const paidToDate = sumBy((loan.repayments||[]).filter(r=>r.date<=asOfDateStr), r=>r.amount);
+  return Math.max(0, (Number(loan.opening)||0) - paidToDate);
+}
 function loanRemaining(loan){
-  const paid = sumBy(loan.repayments, r=>r.amount);
-  return Math.max(0, (Number(loan.opening)||0) - paid);
+  return loanRemainingAt(loan, todayStr());
 }
 function totalLoanRemaining(){
   return sumBy(data.loans, l=>loanRemaining(l));
+}
+function totalLoanRepaidActual(){
+  return sumBy(data.loans.flatMap(l=>l.repayments||[]), r=>r.amount);
 }
 function bucketBalance(bucket){
   return sumBy(bucket.entries, e => e.kind==='withdraw' ? -e.amount : e.amount);
@@ -1117,6 +1182,32 @@ function totalReservesBalance(){
 }
 function totalInvested(){
   return sumBy(data.investments, i=>i.amount);
+}
+// Investment performance: contributions are cost basis. If you've logged a
+// current-value snapshot for an instrument, that overrides cost basis for
+// Net Worth purposes; instruments with no snapshot yet just fall back to
+// what's been contributed, so nothing breaks before you start logging values.
+function distinctInstruments(){
+  const set = new Set();
+  data.investments.forEach(i=>set.add(i.instrument));
+  (data.investmentValuations||[]).forEach(v=>set.add(v.instrument));
+  return [...set];
+}
+function contributedFor(instrument, asOfDate){
+  return sumBy(data.investments.filter(i=>i.instrument===instrument && i.date<=asOfDate), i=>i.amount);
+}
+function latestValuationFor(instrument, asOfDate){
+  const vals = (data.investmentValuations||[])
+    .filter(v=>v.instrument===instrument && v.date<=asOfDate)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  return vals.length ? Number(vals[0].value)||0 : null;
+}
+function currentValueFor(instrument, asOfDate){
+  const v = latestValuationFor(instrument, asOfDate);
+  return v!==null ? v : contributedFor(instrument, asOfDate);
+}
+function totalInvestmentCurrentValue(asOfDate){
+  return sumBy(distinctInstruments(), instr => currentValueFor(instr, asOfDate));
 }
 function totalAssets(){
   return sumBy(data.assets, a=>a.value);
@@ -1169,6 +1260,41 @@ function expenseForMonth(mKey){
   const auto = sumBy(autoExpenseEntries(mKey), e=>e.amount);
   return manual + auto;
 }
+// "Essential" spend for runway purposes: manual expenses + loan EMIs, since
+// those are costs you'd still have in an emergency. Investment contributions
+// and Reserve deposits are excluded on purpose — those are things you'd
+// choose to stop, not survival costs, so including them would understate
+// how long the reserve fund would actually last.
+function essentialExpenseForMonth(mKey){
+  const manual = sumBy(data.expenses.filter(e=>monthKey(e.date)===mKey), e=>e.amount);
+  const emis = sumBy(data.loans.flatMap(l=>l.repayments||[]).filter(r=>monthKey(r.date)===mKey), r=>r.amount);
+  return manual + emis;
+}
+function averageMonthlyEssentialSpend(monthsBack){
+  const months = last6MonthKeys().slice(-monthsBack);
+  const withData = months.filter(m=>essentialExpenseForMonth(m)>0);
+  const useMonths = withData.length ? withData : months;
+  const total = sumBy(useMonths, m=>essentialExpenseForMonth(m));
+  return useMonths.length ? total/useMonths.length : 0;
+}
+// Months of "runway" the Financial Reserves balance would cover, based on
+// the average of the last 3 months' essential spend. Returns null when
+// there's no spending history yet to estimate against.
+function reservesRunwayMonths(){
+  const avg = averageMonthlyEssentialSpend(3);
+  if(avg<=0) return null;
+  return bucketBalance(data.reserves) / avg;
+}
+// Budgets compare against manual + auto expenses in a category for the
+// CURRENT month only (budgets are a recurring monthly target, not tied to a
+// specific month like Income/Expenses entries are).
+function spentForCategoryThisMonth(category){
+  const mKey = currentMonthKey();
+  const norm = (category||'').trim().toLowerCase();
+  const manual = sumBy(data.expenses.filter(e=>monthKey(e.date)===mKey && (e.category||'').trim().toLowerCase()===norm), e=>e.amount);
+  const auto = sumBy(autoExpenseEntries(mKey).filter(e=>(e.category||'').trim().toLowerCase()===norm), e=>e.amount);
+  return manual + auto;
+}
 function investmentForMonth(mKey){
   return sumBy(data.investments.filter(i=>monthKey(i.date)===mKey), i=>i.amount);
 }
@@ -1195,17 +1321,14 @@ function cashBalanceThrough(mKey){
 }
 function netWorthAt(monthKey){
   const monthEnd = endOfMonth(monthKey);
-  const investedToDate = sumBy(data.investments.filter(i=>i.date<=monthEnd), i=>i.amount);
+  const investmentsToDate = totalInvestmentCurrentValue(monthEnd);
   const assetsToDate = sumBy(data.assets.filter(a=>a.date<=monthEnd), a=>a.value);
   const reservesToDate = sumBy(
     data.reserves.entries.filter(e=>e.date<=monthEnd),
     e => e.kind==='withdraw' ? -e.amount : e.amount
   );
-  const liabilities = sumBy(data.loans.filter(l=>l.start<=monthEnd), l=>{
-    const paidToDate = sumBy(l.repayments.filter(r=>r.date<=monthEnd), r=>r.amount);
-    return Math.max(0, (Number(l.opening)||0) - paidToDate);
-  });
-  return (investedToDate + assetsToDate + reservesToDate) - liabilities;
+  const liabilities = sumBy(data.loans.filter(l=>l.start<=monthEnd), l=>loanRemainingAt(l, monthEnd));
+  return (investmentsToDate + assetsToDate + reservesToDate) - liabilities;
 }
 
 /* ---------------- Chart instances ---------------- */
@@ -1242,6 +1365,7 @@ const tabTitles = {
   assets: ['Assets', 'What you own outright, at current value'],
   savings: ['Financial Reserves', 'Deposits debit income, withdrawals credit it back'],
   loans: ['Loans', 'Opening balances and repayment progress'],
+  budgets: ['Budgets', 'Monthly targets vs. actual spend by category'],
   networth: ['Net Worth', 'Investments, assets, and savings minus loans']
 };
 document.querySelectorAll('.navbtn').forEach(btn=>{
@@ -1360,7 +1484,11 @@ function renderOverview(){
 /* ---------------- Net Worth (separate page) ---------------- */
 function renderNetWorth(){
   const mKey = currentMonthKey();
+  const asOfCutoff = endOfMonth(mKey); // same cutoff the headline figure uses, so the tape always agrees with it
   const netWorth = netWorthAt(mKey);
+  const investCurrentVal = totalInvestmentCurrentValue(asOfCutoff);
+  const investContributed = totalInvested();
+  const investGain = investCurrentVal - investContributed;
 
   const nwEl = document.getElementById('netWorthValue');
   nwEl.textContent = formatMoney(netWorth);
@@ -1368,7 +1496,8 @@ function renderNetWorth(){
   document.getElementById('netWorthAsOf').textContent = 'As of ' + new Date().toLocaleDateString(undefined,{ day:'numeric', month:'long', year:'numeric' });
 
   document.getElementById('netWorthTape').innerHTML = `
-    <div class="tape-item invest"><div class="tlabel">Investments</div><div class="tvalue">${formatMoney(totalInvested())}</div></div>
+    <div class="tape-item invest"><div class="tlabel">Investments (current value)</div><div class="tvalue">${formatMoney(investCurrentVal)}</div></div>
+    <div class="tape-item ${investGain>=0?'income':'expense'}"><div class="tlabel">Unrealized gain/loss</div><div class="tvalue">${investGain>=0?'+':''}${formatMoney(investGain)}</div></div>
     <div class="tape-item neutral"><div class="tlabel">Assets</div><div class="tvalue">${formatMoney(totalAssets())}</div></div>
     <div class="tape-item savings"><div class="tlabel">Financial Reserves</div><div class="tvalue">${formatMoney(totalReservesBalance())}</div></div>
     <div class="tape-item loans"><div class="tlabel">Loans remaining</div><div class="tvalue">-${formatMoney(totalLoanRemaining())}</div></div>
@@ -1395,7 +1524,7 @@ function renderNetWorth(){
 
   // Composition pie — positive holdings only (loans is a subtraction, shown in the tape above instead)
   const compParts = [
-    { label: 'Investments', value: totalInvested(), color: '#c9a24b' },
+    { label: 'Investments', value: investCurrentVal, color: '#c9a24b' },
     { label: 'Assets', value: totalAssets(), color: '#7b8794' },
     { label: 'Financial Reserves', value: Math.max(0, totalReservesBalance()), color: '#4fa8a0' }
   ].filter(p=>p.value>0);
@@ -1554,7 +1683,7 @@ document.getElementById('expenseForm').addEventListener('submit', e=>{
   resetExpenseFormState();
   selectedExpenseYear = Number(entryDate.slice(0,4));
   selectedExpenseMonth = monthKey(entryDate) || currentMonthKey();
-  renderExpenses(); renderOverview();
+  renderExpenses(); renderBudgets(); renderOverview();
   primeDateInput('expenseForm', selectedExpenseMonth);
 });
 function resetExpenseFormState(){
@@ -1655,7 +1784,7 @@ document.querySelector('#expenseTable tbody').addEventListener('click', e=>{
   if(delId){
     data.expenses = data.expenses.filter(x=>x.id!==delId);
     if(editingExpenseId===delId){ document.getElementById('expenseForm').reset(); resetExpenseFormState(); }
-    saveData(); renderExpenses(); renderOverview();
+    saveData(); renderExpenses(); renderBudgets(); renderOverview();
   }else if(editId){
     const entry = data.expenses.find(x=>x.id===editId);
     if(!entry) return;
@@ -1693,7 +1822,7 @@ document.getElementById('investForm').addEventListener('submit', e=>{
   f.reset();
   resetInvestFormState();
   document.querySelector('#investForm input[name="date"]').value = todayStr();
-  renderInvestments(); renderIncome(); renderExpenses(); renderOverview(); renderNetWorth();
+  renderInvestments(); renderIncome(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
 });
 function resetInvestFormState(){
   editingInvestId = null;
@@ -1753,7 +1882,92 @@ function renderInvestments(){
       scales: { x:{ grid:{display:false} }, y:{ grid:{color:chartGrid}, beginAtZero:true } }
     }
   });
+
+  const contributed = totalInvested();
+  const currentVal = totalInvestmentCurrentValue(endOfMonth(currentMonthKey()));
+  const gain = currentVal - contributed;
+  const gainClass = gain >= 0 ? 'income' : 'expense';
+  document.getElementById('portfolioValueTape').innerHTML = `
+    <div class="tape-item neutral"><div class="tlabel">Total contributed</div><div class="tvalue">${formatMoney(contributed)}</div></div>
+    <div class="tape-item invest"><div class="tlabel">Current value</div><div class="tvalue">${formatMoney(currentVal)}</div></div>
+    <div class="tape-item ${gainClass}"><div class="tlabel">Unrealized gain/loss</div><div class="tvalue">${gain>=0?'+':''}${formatMoney(gain)}</div></div>
+  `;
+
+  renderValuations();
 }
+
+document.getElementById('valuationForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const f = e.target;
+  const payload = {
+    date: f.elements.date.value,
+    instrument: f.elements.instrument.value.trim(),
+    value: parseFloat(f.elements.value.value)||0,
+    notes: f.elements.notes.value.trim()
+  };
+  if(editingValuationId){
+    const entry = data.investmentValuations.find(x=>x.id===editingValuationId);
+    if(entry) Object.assign(entry, payload);
+    editingValuationId = null;
+  }else{
+    data.investmentValuations.push({ id: uid(), ...payload });
+  }
+  saveData();
+  f.reset();
+  resetValuationFormState();
+  document.querySelector('#valuationForm input[name="date"]').value = todayStr();
+  renderInvestments(); renderNetWorth(); renderOverview();
+});
+function resetValuationFormState(){
+  editingValuationId = null;
+  document.getElementById('valuationSubmitBtn').textContent = 'Log value';
+  document.getElementById('valuationCancelEdit').style.display = 'none';
+}
+document.getElementById('valuationCancelEdit').addEventListener('click', ()=>{
+  document.getElementById('valuationForm').reset();
+  resetValuationFormState();
+  document.querySelector('#valuationForm input[name="date"]').value = todayStr();
+});
+
+function renderValuations(){
+  const tbody = document.querySelector('#valuationTable tbody');
+  const rows = [...(data.investmentValuations||[])].sort((a,b)=> b.date.localeCompare(a.date));
+  if(rows.length===0){
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty">No valuations logged yet. Net Worth uses contributions until you log one.</div></td></tr>`;
+  }else{
+    tbody.innerHTML = rows.map(r=>`
+      <tr>
+        <td>${r.date}</td>
+        <td>${escapeHtml(r.instrument)}</td>
+        <td>${escapeHtml(r.notes||'')}</td>
+        <td class="num">${formatMoney(r.value)}</td>
+        <td><button class="rowedit" data-edit-valuation="${r.id}">Edit</button> <button class="rowdel" data-del-valuation="${r.id}">Delete</button></td>
+      </tr>
+    `).join('');
+  }
+}
+
+document.querySelector('#valuationTable tbody').addEventListener('click', e=>{
+  const delId = e.target.dataset.delValuation;
+  const editId = e.target.dataset.editValuation;
+  if(delId){
+    data.investmentValuations = data.investmentValuations.filter(x=>x.id!==delId);
+    if(editingValuationId===delId){ document.getElementById('valuationForm').reset(); resetValuationFormState(); }
+    saveData(); renderInvestments(); renderNetWorth(); renderOverview();
+  }else if(editId){
+    const entry = data.investmentValuations.find(x=>x.id===editId);
+    if(!entry) return;
+    editingValuationId = editId;
+    const f = document.getElementById('valuationForm');
+    f.elements.date.value = entry.date;
+    f.elements.instrument.value = entry.instrument;
+    f.elements.value.value = entry.value;
+    f.elements.notes.value = entry.notes||'';
+    document.getElementById('valuationSubmitBtn').textContent = 'Save changes';
+    document.getElementById('valuationCancelEdit').style.display = 'inline-block';
+    smoothScrollTo(f);
+  }
+});
 
 document.querySelector('#investTable tbody').addEventListener('click', e=>{
   const delId = e.target.dataset.delInvest;
@@ -1761,7 +1975,7 @@ document.querySelector('#investTable tbody').addEventListener('click', e=>{
   if(delId){
     data.investments = data.investments.filter(x=>x.id!==delId);
     if(editingInvestId===delId){ document.getElementById('investForm').reset(); resetInvestFormState(); }
-    saveData(); renderInvestments(); renderIncome(); renderExpenses(); renderOverview(); renderNetWorth();
+    saveData(); renderInvestments(); renderIncome(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
   }else if(editId){
     const entry = data.investments.find(x=>x.id===editId);
     if(!entry) return;
@@ -1887,12 +2101,17 @@ function renderSavings(){
   const balance = bucketBalance(data.reserves);
   const target = Number(data.reserves.target)||0;
   const pct = target>0 ? Math.min(100, (balance/target)*100) : 0;
+  const runway = reservesRunwayMonths();
 
   document.getElementById('savingsSummary').innerHTML = `
     <div class="ledger-tape">
       <div class="tape-item savings"><div class="tlabel">Financial Reserves</div><div class="tvalue">${formatMoney(balance)}</div></div>
       ${target>0 ? `<div class="tape-item neutral"><div class="tlabel">Target</div><div class="tvalue">${formatMoney(target)}</div></div>` : ''}
+      <div class="tape-item neutral"><div class="tlabel">Runway</div><div class="tvalue">${runway===null ? '—' : (runway.toFixed(1) + ' mo')}</div></div>
     </div>
+    <p style="font-size:11px; color:var(--text-muted); margin:10px 2px 0;">${runway===null
+      ? "Runway needs at least one month of logged expenses to estimate — add some Expense entries to see this."
+      : `Based on your average essential spend (expenses + loan EMIs, excluding investments and reserve deposits) over the last few months — roughly ${formatMoney(averageMonthlyEssentialSpend(3))}/month.`}</p>
   `;
 
   const wrap = document.getElementById('savingsBuckets');
@@ -1967,7 +2186,7 @@ function renderSavings(){
       data.reserves.entries.push({ id: uid(), ...payload });
     }
     resetReservesFormState();
-    saveData(); renderSavings(); renderIncome(); renderExpenses(); renderOverview(); renderNetWorth();
+    saveData(); renderSavings(); renderIncome(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
   });
   document.getElementById('reservesCancelEdit').addEventListener('click', ()=>{
     resetReservesFormState();
@@ -1981,7 +2200,7 @@ function renderSavings(){
     btn.addEventListener('click', ()=>{
       data.reserves.entries = data.reserves.entries.filter(e=>e.id!==btn.dataset.delSavings);
       if(editingReserveId===btn.dataset.delSavings) editingReserveId = null;
-      saveData(); renderSavings(); renderIncome(); renderExpenses(); renderOverview(); renderNetWorth();
+      saveData(); renderSavings(); renderIncome(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
     });
   });
   wrap.querySelectorAll('[data-edit-savings]').forEach(btn=>{
@@ -2021,7 +2240,7 @@ document.getElementById('loanForm').addEventListener('submit', e=>{
   saveData();
   f.reset();
   resetLoanFormState();
-  renderLoans(); renderExpenses(); renderOverview(); renderNetWorth();
+  renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
 });
 function resetLoanFormState(){
   editingLoanId = null;
@@ -2127,7 +2346,7 @@ function renderLoans(){
       }else{
         loan.repayments.push({ id: uid(), ...payload });
       }
-      saveData(); renderLoans(); renderExpenses(); renderOverview(); renderNetWorth();
+      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
     });
   });
   wrap.querySelectorAll('[data-repay-cancel]').forEach(btn=>{
@@ -2159,7 +2378,7 @@ function renderLoans(){
       const loan = data.loans.find(l=>l.id===loanId);
       loan.repayments = loan.repayments.filter(r=>r.id!==repayId);
       if(editingRepayment && editingRepayment.loanId===loanId && editingRepayment.repayId===repayId) editingRepayment = null;
-      saveData(); renderLoans(); renderExpenses(); renderOverview(); renderNetWorth();
+      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
     });
   });
   wrap.querySelectorAll('[data-edit-loan]').forEach(btn=>{
@@ -2182,7 +2401,104 @@ function renderLoans(){
       if(!confirm('Delete this loan and all its repayment history?')) return;
       data.loans = data.loans.filter(l=>l.id!==btn.dataset.delLoan);
       if(editingLoanId===btn.dataset.delLoan){ document.getElementById('loanForm').reset(); resetLoanFormState(); }
-      saveData(); renderLoans(); renderExpenses(); renderOverview(); renderNetWorth();
+      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
+    });
+  });
+}
+
+/* ---------------- Budgets ---------------- */
+document.getElementById('budgetForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const f = e.target;
+  const payload = {
+    category: f.elements.category.value.trim(),
+    amount: parseFloat(f.elements.amount.value)||0
+  };
+  if(editingBudgetId){
+    const entry = data.budgets.find(x=>x.id===editingBudgetId);
+    if(entry) Object.assign(entry, payload);
+    editingBudgetId = null;
+  }else{
+    // Avoid silently creating a second budget for the same category (case-insensitive)
+    const dupe = data.budgets.find(b=>b.category.trim().toLowerCase()===payload.category.trim().toLowerCase());
+    if(dupe){
+      Object.assign(dupe, payload);
+    }else{
+      data.budgets.push({ id: uid(), ...payload });
+    }
+  }
+  saveData();
+  f.reset();
+  resetBudgetFormState();
+  renderBudgets();
+});
+function resetBudgetFormState(){
+  editingBudgetId = null;
+  document.getElementById('budgetSubmitBtn').textContent = 'Add budget';
+  document.getElementById('budgetCancelEdit').style.display = 'none';
+}
+document.getElementById('budgetCancelEdit').addEventListener('click', ()=>{
+  document.getElementById('budgetForm').reset();
+  resetBudgetFormState();
+});
+
+function renderBudgets(){
+  const mKey = currentMonthKey();
+  const wrap = document.getElementById('budgetsList');
+  if(data.budgets.length===0){
+    wrap.innerHTML = `<div class="empty">No budgets set yet. Add a category and monthly target above.</div>`;
+  }else{
+    wrap.innerHTML = data.budgets.map(b=>{
+      const spent = spentForCategoryThisMonth(b.category);
+      const target = Number(b.amount)||0;
+      const pct = target>0 ? Math.min(100, (spent/target)*100) : 0;
+      const over = target>0 && spent>target;
+      return `
+        <div class="bucket-card">
+          <div class="bucket-head">
+            <h3>${escapeHtml(b.category)}</h3>
+            <div class="bucket-figures"><b>${formatMoney(spent)}</b> of ${formatMoney(target)}</div>
+          </div>
+          <div class="progress-track"><div class="progress-fill ${over?'red':''}" style="width:${pct}%"></div></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+            <span style="font-size:11.5px; color:${over?'var(--red)':'var(--text-muted)'};">${over ? 'Over budget by ' + formatMoney(spent-target) : formatMoney(Math.max(0,target-spent)) + ' left this month'}</span>
+            <span>
+              <button class="rowedit" data-edit-budget="${b.id}">Edit</button>
+              <button class="rowdel" data-del-budget="${b.id}">Delete</button>
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const totalBudget = sumBy(data.budgets, b=>b.amount);
+  const totalSpent = sumBy(data.budgets, b=>spentForCategoryThisMonth(b.category));
+  document.getElementById('budgetsSummary').innerHTML = data.budgets.length===0 ? '' : `
+    <div class="ledger-tape">
+      <div class="tape-item invest"><div class="tlabel">Budgeted — ${monthLabel(mKey)}</div><div class="tvalue">${formatMoney(totalBudget)}</div></div>
+      <div class="tape-item ${totalSpent>totalBudget?'expense':'savings'}"><div class="tlabel">Spent so far (budgeted categories)</div><div class="tvalue">${formatMoney(totalSpent)}</div></div>
+    </div>
+  `;
+
+  wrap.querySelectorAll('[data-del-budget]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      data.budgets = data.budgets.filter(b=>b.id!==btn.dataset.delBudget);
+      if(editingBudgetId===btn.dataset.delBudget){ document.getElementById('budgetForm').reset(); resetBudgetFormState(); }
+      saveData(); renderBudgets();
+    });
+  });
+  wrap.querySelectorAll('[data-edit-budget]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const entry = data.budgets.find(b=>b.id===btn.dataset.editBudget);
+      if(!entry) return;
+      editingBudgetId = entry.id;
+      const f = document.getElementById('budgetForm');
+      f.elements.category.value = entry.category;
+      f.elements.amount.value = entry.amount;
+      document.getElementById('budgetSubmitBtn').textContent = 'Save changes';
+      document.getElementById('budgetCancelEdit').style.display = 'inline-block';
+      smoothScrollTo(f);
     });
   });
 }
@@ -2464,6 +2780,7 @@ function renderAll(){
   renderAssets();
   renderSavings();
   renderLoans();
+  renderBudgets();
   renderNetWorth();
 }
 
