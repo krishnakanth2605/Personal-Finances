@@ -40,7 +40,7 @@
   }
   ::selection{ background: var(--gold-dim); color: var(--text); }
   a{ color: var(--teal); }
- 
+
   /* Layout */
   .app{
     display: grid;
@@ -50,7 +50,7 @@
   @media (max-width: 860px){
     .app{ grid-template-columns: 1fr; }
   }
- 
+
   /* Sidebar */
   .sidebar{
     background: var(--surface);
@@ -91,7 +91,7 @@
     text-transform: uppercase;
   }
   @media (max-width: 860px){ .brand{ padding: 4px 10px; } }
- 
+
   .navbtn{
     display: flex;
     align-items: center;
@@ -123,7 +123,7 @@
     outline: 2px solid var(--gold);
     outline-offset: 2px;
   }
- 
+
   .sidebar-foot{
     margin-top: auto;
     padding: 10px;
@@ -143,11 +143,11 @@
     font-family: var(--font-body);
   }
   .sidebar-foot button:hover{ color: var(--text); border-color: var(--gold); }
- 
+
   /* Main */
   main{ padding: 32px 40px 60px; max-width: 1180px; }
   @media (max-width: 860px){ main{ padding: 20px 16px 48px; } }
- 
+
   .topbar{
     display: flex;
     justify-content: space-between;
@@ -179,10 +179,10 @@
     font-family: var(--font-mono);
     font-size: 12px;
   }
- 
+
   section.tab{ display: none; }
   section.tab.active{ display: block; }
- 
+
   /* Ledger tape — signature element */
   .ledger-hero{
     margin-bottom: 18px;
@@ -204,7 +204,7 @@
     color: var(--text-muted);
     margin-top: 2px;
   }
- 
+
   .ledger-tape{
     display: flex;
     background: var(--surface);
@@ -246,18 +246,18 @@
   .tape-item.loans .tvalue{ color: var(--red); }
   .tape-item.invest .tvalue{ color: var(--gold); }
   .tape-item.neutral .tvalue{ color: var(--text); }
- 
+
   .tab-summary{
     margin-bottom: 24px;
   }
   .tab-summary .ledger-tape{ margin: 0; }
   .tab-summary .tape-item{ padding: 14px 18px; }
   .tab-summary .tape-item .tvalue{ font-size: 17px; }
- 
+
   /* Cards / grid */
   .grid-2{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   @media (max-width: 900px){ .grid-2{ grid-template-columns: 1fr; } }
- 
+
   .card{
     background: var(--surface);
     border: 1px solid var(--border);
@@ -274,7 +274,7 @@
     margin: 0 0 14px;
   }
   .card canvas{ max-height: 260px; }
- 
+
   h2.tabtitle{
     font-family: var(--font-display);
     font-size: 24px;
@@ -286,7 +286,7 @@
     font-size: 13px;
     margin: 0 0 24px;
   }
- 
+
   /* Forms */
   .form-row{
     display: grid;
@@ -334,7 +334,7 @@
     color: var(--text-muted);
   }
   .btn.secondary:hover{ color: var(--text); border-color: var(--text-muted); background: var(--surface-raised); }
- 
+
   /* Tables */
   table{ width: 100%; border-collapse: collapse; font-size: 13.5px; }
   thead th{
@@ -370,6 +370,11 @@
     cursor: pointer; font-size: 12px; font-family: var(--font-body);
   }
   .rowdel:hover{ color: var(--red); }
+  .rowedit{
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 12px; font-family: var(--font-body);
+  }
+  .rowedit:hover{ color: var(--teal); }
   .table-wrap{
     background: var(--surface);
     border: 1px solid var(--border);
@@ -382,17 +387,17 @@
     padding: 12px 4px; font-size: 12px; color: var(--text-muted);
   }
   .table-foot .total{ font-family: var(--font-mono); color: var(--text); font-weight: 600; font-size: 14px; }
- 
+
   .empty{
     padding: 34px 16px;
     text-align: center;
     color: var(--text-muted);
     font-size: 13px;
   }
- 
+
   /* Section divider */
   .section-gap{ margin-top: 34px; }
- 
+
   /* Progress bars */
   .progress-track{
     height: 8px;
@@ -409,7 +414,7 @@
   }
   .progress-fill.gold{ background: var(--gold); }
   .progress-fill.red{ background: var(--red); }
- 
+
   .bucket-card{
     background: var(--surface);
     border: 1px solid var(--border);
@@ -439,7 +444,7 @@
     font-family: var(--font-mono);
     font-size: 12px;
   }
- 
+
   .loan-card{
     background: var(--surface);
     border: 1px solid var(--border);
@@ -460,7 +465,7 @@
     border-radius: 6px; padding: 5px 9px; cursor: pointer; font-size: 11px; font-family: var(--font-body);
   }
   .loan-del:hover{ color: var(--red); border-color: var(--red-dim); }
- 
+
   /* Month tabs */
   .month-tabs{
     display: flex;
@@ -497,10 +502,74 @@
     opacity: 0.6;
     vertical-align: middle;
   }
- 
+
   td.tag.auto{ color: var(--text-muted); border-color: var(--border); }
   .auto-hint{ font-size: 11px; color: var(--text-muted); }
- 
+
+  /* Drive sync choice modal */
+  .modal-overlay{
+    position: fixed; inset: 0; background: rgba(0,0,0,0.62);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; padding: 20px;
+  }
+  .modal-box{
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    max-width: 460px; width: 100%;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal-box h3{
+    font-family: var(--font-display);
+    font-size: 19px; font-weight: 600;
+    margin: 0 0 10px; color: var(--text);
+  }
+  .modal-box p{
+    font-size: 13px; color: var(--text-muted);
+    line-height: 1.55; margin: 0 0 20px;
+  }
+  .modal-box p b{ color: var(--text); }
+  .modal-actions{ display: flex; flex-direction: column; gap: 10px; }
+  .modal-btn{
+    padding: 13px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-family: var(--font-body);
+    text-align: left;
+    display: block;
+    width: 100%;
+  }
+  .modal-btn .mb-title{
+    display: block; font-weight: 700; font-size: 13.5px; margin-bottom: 3px;
+  }
+  .modal-btn .mb-sub{
+    display: block; font-weight: 400; font-size: 11.5px; opacity: 0.85; line-height: 1.4;
+  }
+  .modal-btn.safe{ background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
+  .modal-btn.safe:hover{ background: var(--teal); color: #0e1613; }
+  .modal-btn.danger{ background: var(--red-dim); border-color: var(--red); color: var(--red); }
+  .modal-btn.danger:hover{ background: var(--red); color: #1a0f0e; }
+
+  /* Privacy / mask mode — blurs figures so a passerby can't read them */
+  body.privacy-mode .tvalue,
+  body.privacy-mode .netvalue,
+  body.privacy-mode td.num,
+  body.privacy-mode .bucket-figures,
+  body.privacy-mode .loan-figures .rem,
+  body.privacy-mode .table-foot .total,
+  body.privacy-mode #incomeRowCount,
+  body.privacy-mode #expenseRowCount,
+  body.privacy-mode #reservesTargetInput,
+  body.privacy-mode canvas{
+    filter: blur(7px);
+    user-select: none;
+    transition: filter 0.15s ease;
+  }
+  body.privacy-mode canvas{ pointer-events: none; } /* also blocks chart tooltips from leaking exact numbers */
+  #maskToggleBtn.active{ border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
   footer.hint{
     margin-top: 40px;
     color: var(--text-muted);
@@ -511,7 +580,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
- 
+
 <script>
 window.addEventListener('error', function(e){
   const bar = document.getElementById('errBanner');
@@ -522,6 +591,11 @@ window.addEventListener('error', function(e){
 });
 </script>
 <div id="errBanner" style="display:none; position:sticky; top:0; z-index:50; background:#c0574f; color:#fff; padding:10px 16px; font-size:13px; font-family:'Inter',sans-serif; text-align:center;"></div>
+
+<div id="pinGateOverlay" style="display:none;" class="modal-overlay">
+  <div class="modal-box" id="pinGateBox"></div>
+</div>
+
 <div class="app">
   <nav class="sidebar">
     <div class="brand">Ledger <small>Personal</small></div>
@@ -530,7 +604,7 @@ window.addEventListener('error', function(e){
     <button class="navbtn" data-tab="expenses"><span class="dot"></span> Expenses</button>
     <button class="navbtn" data-tab="investments"><span class="dot"></span> Investments</button>
     <button class="navbtn" data-tab="assets"><span class="dot"></span> Assets</button>
-    <button class="navbtn" data-tab="savings"><span class="dot"></span> Savings</button>
+    <button class="navbtn" data-tab="savings"><span class="dot"></span> Financial Reserves</button>
     <button class="navbtn" data-tab="loans"><span class="dot"></span> Loans</button>
     <button class="navbtn" data-tab="networth"><span class="dot"></span> Net Worth</button>
     <div class="sidebar-foot">
@@ -541,27 +615,32 @@ window.addEventListener('error', function(e){
       <button id="importBtn">Import backup (.json)</button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
       <button id="resetBtn">Reset all data</button>
+      <button id="managePinBtn">🔒 Set PIN lock</button>
+      <button id="lockNowBtn" style="display:none;">🔒 Lock now</button>
     </div>
   </nav>
- 
+
   <main>
     <div class="topbar">
       <div>
         <h1 id="pageTitle">Overview</h1>
         <div class="sub" id="pageSub">Where things stand right now</div>
       </div>
-      <div class="currency-picker">
-        Currency
-        <select id="currencySelect">
-          <option value="USD">USD $</option>
-          <option value="AED">AED</option>
-          <option value="INR">INR ₹</option>
-          <option value="EUR">EUR €</option>
-          <option value="GBP">GBP £</option>
-        </select>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <button id="maskToggleBtn" type="button" class="btn secondary" title="Hide amounts (H)">👁 Hide numbers</button>
+        <div class="currency-picker">
+          Currency
+          <select id="currencySelect">
+            <option value="USD">USD $</option>
+            <option value="AED">AED</option>
+            <option value="INR">INR ₹</option>
+            <option value="EUR">EUR €</option>
+            <option value="GBP">GBP £</option>
+          </select>
+        </div>
       </div>
     </div>
- 
+
     <!-- OVERVIEW -->
     <section class="tab active" id="tab-overview">
       <div class="ledger-hero">
@@ -569,9 +648,9 @@ window.addEventListener('error', function(e){
         <div class="netvalue" id="balanceValue">—</div>
         <div class="asof" id="asOfDate"></div>
       </div>
- 
+
       <div class="ledger-tape" id="ledgerTape"></div>
- 
+
       <div class="grid-2">
         <div class="card">
           <h3>Income vs. expenses — last 6 months</h3>
@@ -582,17 +661,25 @@ window.addEventListener('error', function(e){
           <canvas id="chartBalance"></canvas>
         </div>
       </div>
+
+      <div class="grid-2 section-gap">
+        <div class="card" style="grid-column: 1 / -1;">
+          <h3>Expense breakdown — this month</h3>
+          <canvas id="chartOverviewExpensePie"></canvas>
+        </div>
+      </div>
     </section>
- 
+
     <!-- INCOME -->
     <section class="tab" id="tab-income">
       <h2 class="tabtitle">Income</h2>
       <p class="tabdesc">Log salary, bonuses, and side hustle earnings as they land — one month at a time.</p>
- 
+
+      <div class="month-tabs" id="incomeYearTabs"></div>
       <div class="month-tabs" id="incomeMonthTabs"></div>
- 
+
       <div class="tab-summary" id="incomeSummary"></div>
- 
+
       <form class="form-row" id="incomeForm">
         <div class="field"><label>Date</label><input type="date" name="date" required></div>
         <div class="field">
@@ -604,9 +691,10 @@ window.addEventListener('error', function(e){
         </div>
         <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
         <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
-        <button class="btn" type="submit">Add entry</button>
+        <button class="btn" type="submit" id="incomeSubmitBtn">Add entry</button>
+        <button class="btn secondary" type="button" id="incomeCancelEdit" style="display:none;">Cancel edit</button>
       </form>
- 
+
       <div class="grid-2">
         <div class="table-wrap" style="grid-column: 1 / -1;">
           <table id="incomeTable">
@@ -616,7 +704,7 @@ window.addEventListener('error', function(e){
           <div class="table-foot"><span id="incomeRowCount">—</span><span class="total" id="incomeMonthTotal">—</span></div>
         </div>
       </div>
- 
+
       <div class="grid-2 section-gap">
         <div class="card">
           <h3>Income by category (this month)</h3>
@@ -624,16 +712,17 @@ window.addEventListener('error', function(e){
         </div>
       </div>
     </section>
- 
+
     <!-- EXPENSES -->
     <section class="tab" id="tab-expenses">
       <h2 class="tabtitle">Expenses</h2>
       <p class="tabdesc">Log daily spending — fixed commitments and variable day-to-day costs. Investment contributions and loan EMIs from those tabs are added here automatically.</p>
- 
+
+      <div class="month-tabs" id="expenseYearTabs"></div>
       <div class="month-tabs" id="expenseMonthTabs"></div>
- 
+
       <div class="tab-summary" id="expenseSummary"></div>
- 
+
       <form class="form-row" id="expenseForm">
         <div class="field"><label>Date</label><input type="date" name="date" required></div>
         <div class="field">
@@ -654,9 +743,10 @@ window.addEventListener('error', function(e){
         </div>
         <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
         <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
-        <button class="btn" type="submit">Add entry</button>
+        <button class="btn" type="submit" id="expenseSubmitBtn">Add entry</button>
+        <button class="btn secondary" type="button" id="expenseCancelEdit" style="display:none;">Cancel edit</button>
       </form>
- 
+
       <div class="table-wrap">
         <table id="expenseTable">
           <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Notes</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
@@ -664,7 +754,7 @@ window.addEventListener('error', function(e){
         </table>
         <div class="table-foot"><span id="expenseRowCount">—</span><span class="total" id="expenseMonthTotal">—</span></div>
       </div>
- 
+
       <div class="grid-2 section-gap">
         <div class="card">
           <h3>Spending by category (this month)</h3>
@@ -676,14 +766,14 @@ window.addEventListener('error', function(e){
         </div>
       </div>
     </section>
- 
+
     <!-- INVESTMENTS -->
     <section class="tab" id="tab-investments">
       <h2 class="tabtitle">Investments</h2>
       <p class="tabdesc">Track recurring contributions across your instruments, typically logged monthly. Each contribution is added to that month's Expenses automatically and counts toward Net Worth.</p>
- 
+
       <div class="tab-summary" id="investSummary"></div>
- 
+
       <form class="form-row" id="investForm">
         <div class="field"><label>Date</label><input type="date" name="date" required></div>
         <div class="field">
@@ -696,17 +786,23 @@ window.addEventListener('error', function(e){
         </div>
         <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
         <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
-        <button class="btn" type="submit">Add entry</button>
+        <button class="btn" type="submit" id="investSubmitBtn">Add entry</button>
+        <button class="btn secondary" type="button" id="investCancelEdit" style="display:none;">Cancel edit</button>
       </form>
- 
+
+      <div class="field" style="max-width:320px; margin-bottom:14px;">
+        <label>Search</label>
+        <input type="text" id="investSearch" placeholder="Filter by instrument or notes…">
+      </div>
+
       <div class="table-wrap">
         <table id="investTable">
           <thead><tr><th>Date</th><th>Instrument</th><th>Notes</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
-        <div class="table-foot"><span>Total invested to date</span><span class="total" id="investTotal">—</span></div>
+        <div class="table-foot"><span id="investRowCount">—</span><span class="total" id="investTotal">—</span></div>
       </div>
- 
+
       <div class="grid-2 section-gap">
         <div class="card" style="grid-column: 1 / -1;">
           <h3>Cumulative invested over time</h3>
@@ -714,14 +810,14 @@ window.addEventListener('error', function(e){
         </div>
       </div>
     </section>
- 
+
     <!-- ASSETS -->
     <section class="tab" id="tab-assets">
       <h2 class="tabtitle">Assets</h2>
       <p class="tabdesc">Track what you own outright — property, vehicles, gold, jewelry, or anything else with resale value. Logged at current value and counted straight into your net worth.</p>
- 
+
       <div class="tab-summary" id="assetsSummary"></div>
- 
+
       <form class="form-row" id="assetForm">
         <div class="field"><label>Date</label><input type="date" name="date" required></div>
         <div class="field">
@@ -738,9 +834,15 @@ window.addEventListener('error', function(e){
         </div>
         <div class="field"><label>Current value</label><input type="number" name="value" step="0.01" min="0" placeholder="0.00" required></div>
         <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
-        <button class="btn" type="submit">Add asset</button>
+        <button class="btn" type="submit" id="assetSubmitBtn">Add asset</button>
+        <button class="btn secondary" type="button" id="assetCancelEdit" style="display:none;">Cancel edit</button>
       </form>
- 
+
+      <div class="field" style="max-width:320px; margin-bottom:14px;">
+        <label>Search</label>
+        <input type="text" id="assetSearch" placeholder="Filter by asset, category, or notes…">
+      </div>
+
       <div class="table-wrap">
         <table id="assetsTable">
           <thead><tr><th>Date</th><th>Asset</th><th>Category</th><th>Notes</th><th style="text-align:right;">Value</th><th></th></tr></thead>
@@ -748,7 +850,7 @@ window.addEventListener('error', function(e){
         </table>
         <div class="table-foot"><span id="assetsRowCount">—</span><span class="total" id="assetsTotal">—</span></div>
       </div>
- 
+
       <div class="grid-2 section-gap">
         <div class="card">
           <h3>Assets by category</h3>
@@ -756,35 +858,36 @@ window.addEventListener('error', function(e){
         </div>
       </div>
     </section>
- 
-    <!-- SAVINGS -->
+
+    <!-- FINANCIAL RESERVES -->
     <section class="tab" id="tab-savings">
-      <h2 class="tabtitle">Savings</h2>
-      <p class="tabdesc">Two buckets — a contingency fund for safety, a wishlist fund for things you want.</p>
- 
+      <h2 class="tabtitle">Financial Reserves</h2>
+      <p class="tabdesc">Your emergency/reserve fund. Deposits are debited from that month's income as an expense; withdrawals are credited back as income.</p>
+
       <div class="tab-summary" id="savingsSummary"></div>
- 
+
       <div id="savingsBuckets"></div>
     </section>
- 
+
     <!-- LOANS -->
     <section class="tab" id="tab-loans">
       <h2 class="tabtitle">Loans</h2>
       <p class="tabdesc">Track opening balances and repayments across every loan you're paying down. Each repayment (EMI) is added to that month's Expenses automatically and reduces what you owe toward Net Worth.</p>
- 
+
       <div class="tab-summary" id="loansSummary"></div>
- 
+
       <form class="form-row" id="loanForm">
         <div class="field"><label>Loan name</label><input type="text" name="name" placeholder="Car loan" required></div>
         <div class="field"><label>Opening balance</label><input type="number" name="opening" step="0.01" min="0" placeholder="0.00" required></div>
         <div class="field"><label>Interest rate % <span style="opacity:.6;">(optional)</span></label><input type="number" name="rate" step="0.01" min="0" placeholder="0"></div>
         <div class="field"><label>Start date</label><input type="date" name="start" required></div>
-        <button class="btn" type="submit">Add loan</button>
+        <button class="btn" type="submit" id="loanSubmitBtn">Add loan</button>
+        <button class="btn secondary" type="button" id="loanCancelEdit" style="display:none;">Cancel edit</button>
       </form>
- 
+
       <div id="loansList"></div>
     </section>
- 
+
     <!-- NET WORTH -->
     <section class="tab" id="tab-networth">
       <div class="ledger-hero">
@@ -792,45 +895,66 @@ window.addEventListener('error', function(e){
         <div class="netvalue" id="netWorthValue">—</div>
         <div class="asof" id="netWorthAsOf"></div>
       </div>
-      <p class="tabdesc" style="margin-top:-8px;">Built from Investments, Assets, and Savings, minus what's still owed on Loans. Income and expenses don't factor in.</p>
- 
+      <p class="tabdesc" style="margin-top:-8px;">Built from Investments, Assets, and Financial Reserves, minus what's still owed on Loans. Income and expenses don't factor in.</p>
+
       <div class="ledger-tape" id="netWorthTape"></div>
- 
+
       <div class="grid-2 section-gap">
         <div class="card" style="grid-column: 1 / -1;">
           <h3>Net worth trend — last 6 months</h3>
           <canvas id="chartNetWorth"></canvas>
         </div>
       </div>
+
+      <div class="grid-2 section-gap">
+        <div class="card" style="grid-column: 1 / -1;">
+          <h3>Net worth composition</h3>
+          <canvas id="chartNetWorthPie"></canvas>
+          <p style="font-size:11px; color:var(--text-muted); margin:10px 0 0;">Shows Investments, Assets, and Financial Reserves. Loans remaining reduce net worth but aren't shown as a slice, since they're a subtraction rather than a holding — see the figure above.</p>
+        </div>
+      </div>
     </section>
- 
+
     <footer class="hint">Data is saved automatically in this browser. Use "Export backup" from time to time to keep a copy.</footer>
   </main>
 </div>
- 
+
 <script>
 /* ---------------- Data layer ---------------- */
 const STORAGE_KEY = 'ledgerDashboard_v1';
- 
+
 function defaultData(){
   return {
     currency: 'USD',
+    privacyMode: false,
     income: [],
     expenses: [],
     investments: [],
     assets: [],
-    savings: {
-      contingency: { target: 0, entries: [] },
-      wishlist: { target: 0, entries: [] }
-    },
+    reserves: { target: 0, entries: [] },
     loans: []
   };
 }
- 
+
 let data = loadData();
+let selectedIncomeYear = null;
 let selectedIncomeMonth = null;   // set on init, once currentMonthKey() is available
+let selectedExpenseYear = null;
 let selectedExpenseMonth = null;
- 
+
+// Edit-in-place state — null means "adding new", otherwise the id of the
+// entry currently loaded into that section's form.
+let editingIncomeId = null;
+let editingExpenseId = null;
+let editingInvestId = null;
+let editingAssetId = null;
+let editingReserveId = null;
+let editingLoanId = null;
+let editingRepayment = null; // { loanId, repayId }
+
+let investSearchTerm = '';
+let assetSearchTerm = '';
+
 function renderMonthTabs(containerId, months, selected, hasDataFn, onSelect){
   const el = document.getElementById(containerId);
   if(!el) return;
@@ -844,6 +968,18 @@ function renderMonthTabs(containerId, months, selected, hasDataFn, onSelect){
     btn.addEventListener('click', ()=> onSelect(btn.dataset.month));
   });
 }
+function renderYearTabs(containerId, years, selected, onSelect){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = years.map(y=>{
+    const cls = ['month-tab'];
+    if(y===selected) cls.push('active');
+    return `<button type="button" class="${cls.join(' ')}" data-year="${y}">${y}</button>`;
+  }).join('');
+  el.querySelectorAll('[data-year]').forEach(btn=>{
+    btn.addEventListener('click', ()=> onSelect(Number(btn.dataset.year)));
+  });
+}
 // When switching to a month tab, default that section's date input to a
 // sensible day within that month (today, if it's the current month).
 function primeDateInput(formId, mKey){
@@ -851,25 +987,39 @@ function primeDateInput(formId, mKey){
   if(!input) return;
   input.value = (mKey === currentMonthKey()) ? todayStr() : (mKey + '-01');
 }
- 
+
 function loadData(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return defaultData();
     const parsed = JSON.parse(raw);
     const d = defaultData();
-    return Object.assign(d, parsed, {
-      savings: {
-        contingency: Object.assign({target:0, entries:[]}, parsed.savings?.contingency),
-        wishlist: Object.assign({target:0, entries:[]}, parsed.savings?.wishlist)
-      }
-    });
+    const merged = Object.assign(d, parsed);
+    merged.reserves = migrateReserves(parsed);
+    return merged;
   }catch(e){
     console.error('Failed to load data', e);
     return defaultData();
   }
 }
- 
+
+// Older backups stored two buckets (contingency + wishlist) under `savings`.
+// Fold both into the single `reserves` fund so old data isn't lost.
+function migrateReserves(parsed){
+  if(parsed.reserves){
+    return Object.assign({target:0, entries:[]}, parsed.reserves);
+  }
+  if(parsed.savings){
+    const c = parsed.savings.contingency || {entries:[], target:0};
+    const w = parsed.savings.wishlist || {entries:[], target:0};
+    return {
+      target: (Number(c.target)||0) + (Number(w.target)||0),
+      entries: [...(c.entries||[]), ...(w.entries||[])]
+    };
+  }
+  return { target: 0, entries: [] };
+}
+
 let storageBlocked = false;
 function saveData(){
   try{
@@ -886,11 +1036,16 @@ function saveData(){
     }
   }
 }
- 
+
 function uid(){
   return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
 }
- 
+function smoothScrollTo(el){
+  if(el && typeof el.scrollIntoView === 'function'){
+    el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+}
+
 /* ---------------- Helpers ---------------- */
 function formatMoney(n){
   const val = Number(n) || 0;
@@ -904,7 +1059,7 @@ function monthKey(dateStr){ return (dateStr||'').slice(0,7); }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function currentMonthKey(){ return todayStr().slice(0,7); }
 function sumBy(arr, fn){ return arr.reduce((a,x)=>a+(Number(fn(x))||0),0); }
- 
+
 function last6MonthKeys(){
   const out = [];
   const d = new Date();
@@ -927,19 +1082,25 @@ function endOfMonth(key){
   const [y,m] = key.split('-').map(Number);
   return new Date(y, m, 0).toISOString().slice(0,10);
 }
-// 12 month tabs: current month through the following 11 months, so the
-// active month always leads the row and stays reachable as the year rolls on.
-function yearMonths(){
-  const d = new Date();
-  d.setDate(1);
+// Calendar-year month tabs. Every year gets the full Jan–Dec, except the
+// year this app started in (2026), which begins at August since there's
+// no data — and no need for tabs — before then.
+const RESERVE_START_YEAR = 2026;
+const RESERVE_START_MONTH = 8; // August
+function availableYears(){
   const out = [];
-  for(let i=0;i<12;i++){
-    const dd = new Date(d.getFullYear(), d.getMonth()+i, 1);
-    out.push(dd.toISOString().slice(0,7));
+  for(let y=RESERVE_START_YEAR; y<=RESERVE_START_YEAR+4; y++) out.push(y);
+  return out;
+}
+function monthsForYear(year){
+  const startMonth = (year === RESERVE_START_YEAR) ? RESERVE_START_MONTH : 1;
+  const out = [];
+  for(let m=startMonth; m<=12; m++){
+    out.push(`${year}-${String(m).padStart(2,'0')}`);
   }
   return out;
 }
- 
+
 /* ---------------- Derived totals ---------------- */
 function loanRemaining(loan){
   const paid = sumBy(loan.repayments, r=>r.amount);
@@ -951,8 +1112,8 @@ function totalLoanRemaining(){
 function bucketBalance(bucket){
   return sumBy(bucket.entries, e => e.kind==='withdraw' ? -e.amount : e.amount);
 }
-function totalSavingsBalance(){
-  return bucketBalance(data.savings.contingency) + bucketBalance(data.savings.wishlist);
+function totalReservesBalance(){
+  return bucketBalance(data.reserves);
 }
 function totalInvested(){
   return sumBy(data.investments, i=>i.amount);
@@ -960,12 +1121,24 @@ function totalInvested(){
 function totalAssets(){
   return sumBy(data.assets, a=>a.value);
 }
-function incomeForMonth(mKey){
-  return sumBy(data.income.filter(i=>monthKey(i.date)===mKey), i=>i.amount);
+// Withdrawals from Financial Reserves are folded into that month's income
+// automatically — cash coming back into what's spendable.
+function autoIncomeEntries(mKey){
+  return data.reserves.entries.filter(e=>monthKey(e.date)===mKey && e.kind==='withdraw').map(e=>({
+    id: 'auto-reserve-'+e.id, date: e.date,
+    category: 'Financial Reserves — withdrawal',
+    notes: e.notes || '', amount: e.amount, auto: true, autoTab: 'reserves'
+  }));
 }
-// Investment contributions and loan repayments logged for a month are folded
-// into that month's expenses automatically — they're money leaving the same
-// pocket as rent or groceries, just tagged so they can be told apart.
+function incomeForMonth(mKey){
+  const manual = sumBy(data.income.filter(i=>monthKey(i.date)===mKey), i=>i.amount);
+  const auto = sumBy(autoIncomeEntries(mKey), e=>e.amount);
+  return manual + auto;
+}
+// Investment contributions, loan repayments, and Financial Reserves deposits
+// logged for a month are folded into that month's expenses automatically —
+// they're money leaving the same pocket as rent or groceries, just tagged so
+// they can be told apart.
 function autoExpenseEntries(mKey){
   const invEntries = data.investments.filter(i=>monthKey(i.date)===mKey).map(i=>({
     id: 'auto-inv-'+i.id, date: i.date, type: 'fixed',
@@ -984,7 +1157,12 @@ function autoExpenseEntries(mKey){
       }
     });
   });
-  return [...invEntries, ...loanEntries];
+  const reserveEntries = data.reserves.entries.filter(e=>monthKey(e.date)===mKey && e.kind!=='withdraw').map(e=>({
+    id: 'auto-reserve-'+e.id, date: e.date, type: 'fixed',
+    category: 'Financial Reserves — deposit',
+    notes: e.notes || '', amount: e.amount, auto: true, autoTab: 'reserves'
+  }));
+  return [...invEntries, ...loanEntries, ...reserveEntries];
 }
 function expenseForMonth(mKey){
   const manual = sumBy(data.expenses.filter(e=>monthKey(e.date)===mKey), e=>e.amount);
@@ -994,9 +1172,10 @@ function expenseForMonth(mKey){
 function investmentForMonth(mKey){
   return sumBy(data.investments.filter(i=>monthKey(i.date)===mKey), i=>i.amount);
 }
-// Running cash balance: every rupee/dollar of income ever logged, minus every
-// expense (including investment contributions and loan EMIs) up through the
-// end of this month. This is what carries forward month to month.
+// Running cash balance: every rupee/dollar of income ever logged (including
+// reserve withdrawals), minus every expense (including investment
+// contributions, loan EMIs, and reserve deposits) up through the end of this
+// month. This is what carries forward month to month.
 function cashBalanceThrough(mKey){
   const monthEnd = endOfMonth(mKey);
   const incomeToDate = sumBy(data.income.filter(i=>i.date<=monthEnd), i=>i.amount);
@@ -1006,23 +1185,29 @@ function cashBalanceThrough(mKey){
     data.loans.flatMap(l=>l.repayments||[]).filter(r=>r.date<=monthEnd),
     r=>r.amount
   );
-  return incomeToDate - expenseToDate - investedToDate - repaidToDate;
+  const reserveDepositsToDate = sumBy(
+    data.reserves.entries.filter(e=>e.kind!=='withdraw' && e.date<=monthEnd), e=>e.amount
+  );
+  const reserveWithdrawalsToDate = sumBy(
+    data.reserves.entries.filter(e=>e.kind==='withdraw' && e.date<=monthEnd), e=>e.amount
+  );
+  return incomeToDate + reserveWithdrawalsToDate - expenseToDate - investedToDate - repaidToDate - reserveDepositsToDate;
 }
 function netWorthAt(monthKey){
   const monthEnd = endOfMonth(monthKey);
   const investedToDate = sumBy(data.investments.filter(i=>i.date<=monthEnd), i=>i.amount);
   const assetsToDate = sumBy(data.assets.filter(a=>a.date<=monthEnd), a=>a.value);
-  const savingsToDate = sumBy(
-    [...data.savings.contingency.entries, ...data.savings.wishlist.entries].filter(e=>e.date<=monthEnd),
+  const reservesToDate = sumBy(
+    data.reserves.entries.filter(e=>e.date<=monthEnd),
     e => e.kind==='withdraw' ? -e.amount : e.amount
   );
   const liabilities = sumBy(data.loans.filter(l=>l.start<=monthEnd), l=>{
     const paidToDate = sumBy(l.repayments.filter(r=>r.date<=monthEnd), r=>r.amount);
     return Math.max(0, (Number(l.opening)||0) - paidToDate);
   });
-  return (investedToDate + assetsToDate + savingsToDate) - liabilities;
+  return (investedToDate + assetsToDate + reservesToDate) - liabilities;
 }
- 
+
 /* ---------------- Chart instances ---------------- */
 const charts = {};
 function upsertChart(id, config){
@@ -1045,9 +1230,9 @@ if(chartsAvailable){
   Chart.defaults.font.size = 11;
   Chart.defaults.borderColor = chartGrid;
 }
- 
+
 const palette = ['#c9a24b','#4fa8a0','#c0574f','#6fa96c','#8b8fdc','#d98f5a','#7b8794','#e0c068'];
- 
+
 /* ---------------- Tab switching ---------------- */
 const tabTitles = {
   overview: ['Overview', 'Where things stand right now'],
@@ -1055,7 +1240,7 @@ const tabTitles = {
   expenses: ['Expenses', 'Fixed commitments and day-to-day spending'],
   investments: ['Investments', 'Contributions across your instruments'],
   assets: ['Assets', 'What you own outright, at current value'],
-  savings: ['Savings', 'Contingency and wishlist funds'],
+  savings: ['Financial Reserves', 'Deposits debit income, withdrawals credit it back'],
   loans: ['Loans', 'Opening balances and repayment progress'],
   networth: ['Net Worth', 'Investments, assets, and savings minus loans']
 };
@@ -1070,7 +1255,7 @@ document.querySelectorAll('.navbtn').forEach(btn=>{
     document.getElementById('pageSub').textContent = tabTitles[tab][1];
   });
 });
- 
+
 /* ---------------- Currency ---------------- */
 const currencySelect = document.getElementById('currencySelect');
 currencySelect.value = data.currency;
@@ -1079,24 +1264,46 @@ currencySelect.addEventListener('change', ()=>{
   saveData();
   renderAll();
 });
- 
+
+/* ---------------- Privacy / mask mode ---------------- */
+const maskToggleBtn = document.getElementById('maskToggleBtn');
+function applyPrivacyMode(){
+  document.body.classList.toggle('privacy-mode', !!data.privacyMode);
+  maskToggleBtn.classList.toggle('active', !!data.privacyMode);
+  maskToggleBtn.textContent = data.privacyMode ? '🙈 Show numbers' : '👁 Hide numbers';
+}
+maskToggleBtn.addEventListener('click', ()=>{
+  data.privacyMode = !data.privacyMode;
+  saveData();
+  applyPrivacyMode();
+});
+// Quick keyboard shortcut too — handy to mash right as someone walks up.
+document.addEventListener('keydown', (e)=>{
+  if(e.key.toLowerCase()==='h' && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)){
+    data.privacyMode = !data.privacyMode;
+    saveData();
+    applyPrivacyMode();
+  }
+});
+applyPrivacyMode();
+
 /* ---------------- Overview ---------------- */
 function renderOverview(){
   const mKey = currentMonthKey();
   const incomeMTD = incomeForMonth(mKey);
   const expenseMTD = expenseForMonth(mKey);
   const balance = cashBalanceThrough(mKey);
- 
+
   const balEl = document.getElementById('balanceValue');
   balEl.textContent = formatMoney(balance);
   balEl.classList.toggle('neg', balance < 0);
   document.getElementById('asOfDate').textContent = 'As of ' + new Date().toLocaleDateString(undefined,{ day:'numeric', month:'long', year:'numeric' });
- 
+
   document.getElementById('ledgerTape').innerHTML = `
     <div class="tape-item income"><div class="tlabel">Income (this month)</div><div class="tvalue">${formatMoney(incomeMTD)}</div></div>
     <div class="tape-item expense"><div class="tlabel">Expenses (this month)</div><div class="tvalue">${formatMoney(expenseMTD)}</div></div>
   `;
- 
+
   const months = last6MonthKeys();
   const incomeSeries = months.map(k=>incomeForMonth(k));
   const expenseSeries = months.map(k=>expenseForMonth(k));
@@ -1115,7 +1322,7 @@ function renderOverview(){
       scales: { x:{ grid:{display:false} }, y:{ grid:{color: chartGrid}, beginAtZero:true } }
     }
   });
- 
+
   const balSeries = months.map(k=>cashBalanceThrough(k));
   upsertChart('chartBalance', {
     type: 'line',
@@ -1133,25 +1340,40 @@ function renderOverview(){
       scales: { x:{ grid:{display:false} }, y:{ grid:{color: chartGrid} } }
     }
   });
+
+  // Expense breakdown pie — combines manual entries with auto EMI/investment/reserve lines
+  const pieRows = [...data.expenses.filter(e=>monthKey(e.date)===mKey), ...autoExpenseEntries(mKey)];
+  const pieByCat = {};
+  pieRows.forEach(e=>{ pieByCat[e.category] = (pieByCat[e.category]||0) + Number(e.amount||0); });
+  const pieLabels = Object.keys(pieByCat);
+  if(pieLabels.length===0){
+    upsertChart('chartOverviewExpensePie', { type:'pie', data:{labels:['No expenses yet'],datasets:[{data:[1],backgroundColor:['#2c313d']}]}, options:{plugins:{legend:{display:false}, tooltip:{enabled:false}}} });
+  }else{
+    upsertChart('chartOverviewExpensePie', {
+      type: 'pie',
+      data: { labels: pieLabels, datasets: [{ data: pieLabels.map(l=>pieByCat[l]), backgroundColor: palette, borderColor: '#1b1e27', borderWidth: 2 }] },
+      options: { plugins: { legend: { position:'bottom', labels:{ boxWidth:10, padding:12 } } } }
+    });
+  }
 }
- 
+
 /* ---------------- Net Worth (separate page) ---------------- */
 function renderNetWorth(){
   const mKey = currentMonthKey();
   const netWorth = netWorthAt(mKey);
- 
+
   const nwEl = document.getElementById('netWorthValue');
   nwEl.textContent = formatMoney(netWorth);
   nwEl.classList.toggle('neg', netWorth < 0);
   document.getElementById('netWorthAsOf').textContent = 'As of ' + new Date().toLocaleDateString(undefined,{ day:'numeric', month:'long', year:'numeric' });
- 
+
   document.getElementById('netWorthTape').innerHTML = `
     <div class="tape-item invest"><div class="tlabel">Investments</div><div class="tvalue">${formatMoney(totalInvested())}</div></div>
     <div class="tape-item neutral"><div class="tlabel">Assets</div><div class="tvalue">${formatMoney(totalAssets())}</div></div>
-    <div class="tape-item savings"><div class="tlabel">Savings</div><div class="tvalue">${formatMoney(totalSavingsBalance())}</div></div>
+    <div class="tape-item savings"><div class="tlabel">Financial Reserves</div><div class="tvalue">${formatMoney(totalReservesBalance())}</div></div>
     <div class="tape-item loans"><div class="tlabel">Loans remaining</div><div class="tvalue">-${formatMoney(totalLoanRemaining())}</div></div>
   `;
- 
+
   const months = last6MonthKeys();
   const nwSeries = months.map(k=>netWorthAt(k));
   upsertChart('chartNetWorth', {
@@ -1170,40 +1392,83 @@ function renderNetWorth(){
       scales: { x:{ grid:{display:false} }, y:{ grid:{color: chartGrid} } }
     }
   });
+
+  // Composition pie — positive holdings only (loans is a subtraction, shown in the tape above instead)
+  const compParts = [
+    { label: 'Investments', value: totalInvested(), color: '#c9a24b' },
+    { label: 'Assets', value: totalAssets(), color: '#7b8794' },
+    { label: 'Financial Reserves', value: Math.max(0, totalReservesBalance()), color: '#4fa8a0' }
+  ].filter(p=>p.value>0);
+  if(compParts.length===0){
+    upsertChart('chartNetWorthPie', { type:'pie', data:{labels:['No holdings yet'],datasets:[{data:[1],backgroundColor:['#2c313d']}]}, options:{plugins:{legend:{display:false}, tooltip:{enabled:false}}} });
+  }else{
+    upsertChart('chartNetWorthPie', {
+      type: 'pie',
+      data: { labels: compParts.map(p=>p.label), datasets: [{ data: compParts.map(p=>p.value), backgroundColor: compParts.map(p=>p.color), borderColor: '#1b1e27', borderWidth: 2 }] },
+      options: { plugins: { legend: { position:'bottom', labels:{ boxWidth:10, padding:12 } } } }
+    });
+  }
 }
- 
+
 /* ---------------- Income ---------------- */
 document.getElementById('incomeForm').addEventListener('submit', e=>{
   e.preventDefault();
   const f = e.target;
   const entryDate = f.elements.date.value;
-  data.income.push({
-    id: uid(),
+  const payload = {
     date: entryDate,
     category: f.elements.category.value.trim(),
     amount: parseFloat(f.elements.amount.value)||0,
     notes: f.elements.notes.value.trim()
-  });
+  };
+  if(editingIncomeId){
+    const entry = data.income.find(i=>i.id===editingIncomeId);
+    if(entry) Object.assign(entry, payload);
+    editingIncomeId = null;
+  }else{
+    data.income.push({ id: uid(), ...payload });
+  }
   saveData();
   f.reset();
+  resetIncomeFormState();
+  selectedIncomeYear = Number(entryDate.slice(0,4));
   selectedIncomeMonth = monthKey(entryDate) || currentMonthKey();
   renderIncome(); renderOverview();
   primeDateInput('incomeForm', selectedIncomeMonth);
 });
- 
+function resetIncomeFormState(){
+  editingIncomeId = null;
+  document.getElementById('incomeSubmitBtn').textContent = 'Add entry';
+  document.getElementById('incomeCancelEdit').style.display = 'none';
+}
+document.getElementById('incomeCancelEdit').addEventListener('click', ()=>{
+  document.getElementById('incomeForm').reset();
+  resetIncomeFormState();
+  primeDateInput('incomeForm', selectedIncomeMonth);
+});
+
 function renderIncome(){
-  if(selectedIncomeMonth === null) selectedIncomeMonth = currentMonthKey();
-  const months = yearMonths();
-  if(!months.includes(selectedIncomeMonth)) selectedIncomeMonth = currentMonthKey();
+  const years = availableYears();
+  if(selectedIncomeYear === null || !years.includes(selectedIncomeYear)) selectedIncomeYear = RESERVE_START_YEAR;
+  renderYearTabs('incomeYearTabs', years, selectedIncomeYear,
+    y => { selectedIncomeYear = y; selectedIncomeMonth = monthsForYear(y)[0]; renderIncome(); primeDateInput('incomeForm', selectedIncomeMonth); }
+  );
+
+  const months = monthsForYear(selectedIncomeYear);
+  if(selectedIncomeMonth === null || !months.includes(selectedIncomeMonth)){
+    selectedIncomeMonth = months.includes(currentMonthKey()) ? currentMonthKey() : months[0];
+  }
   const mKey = selectedIncomeMonth;
- 
+
   renderMonthTabs('incomeMonthTabs', months, mKey,
-    m => data.income.some(i=>monthKey(i.date)===m),
+    m => data.income.some(i=>monthKey(i.date)===m) || autoIncomeEntries(m).length>0,
     m => { selectedIncomeMonth = m; renderIncome(); primeDateInput('incomeForm', m); }
   );
- 
+
   const tbody = document.querySelector('#incomeTable tbody');
-  const rows = [...data.income].filter(r=>monthKey(r.date)===mKey).sort((a,b)=> b.date.localeCompare(a.date));
+  const manualRows = data.income.filter(r=>monthKey(r.date)===mKey);
+  const autoRows = autoIncomeEntries(mKey);
+  const rows = [...manualRows, ...autoRows].sort((a,b)=> b.date.localeCompare(a.date));
   if(rows.length===0){
     tbody.innerHTML = `<tr><td colspan="5"><div class="empty">No income logged for ${monthLabel(mKey)} yet. Add an entry above.</div></td></tr>`;
   }else{
@@ -1213,19 +1478,20 @@ function renderIncome(){
         <td>${escapeHtml(r.category)}</td>
         <td>${escapeHtml(r.notes||'')}</td>
         <td class="num">${formatMoney(r.amount)}</td>
-        <td><button class="rowdel" data-del-income="${r.id}">Delete</button></td>
+        <td>${r.auto ? `<span class="auto-hint">via Financial Reserves</span>` : `<button class="rowedit" data-edit-income="${r.id}">Edit</button> <button class="rowdel" data-del-income="${r.id}">Delete</button>`}</td>
       </tr>
     `).join('');
   }
   const grossMonth = incomeForMonth(mKey);
+  const autoTotal = sumBy(autoRows, e=>e.amount);
   document.getElementById('incomeSummary').innerHTML = `
     <div class="ledger-tape">
       <div class="tape-item income"><div class="tlabel">Income — ${monthLabel(mKey)}</div><div class="tvalue">${formatMoney(grossMonth)}</div></div>
     </div>
   `;
-  document.getElementById('incomeRowCount').textContent = rows.length + (rows.length===1 ? ' entry' : ' entries');
+  document.getElementById('incomeRowCount').textContent = rows.length + (rows.length===1 ? ' entry' : ' entries') + (autoTotal>0 ? ` (${formatMoney(autoTotal)} automatic)` : '');
   document.getElementById('incomeMonthTotal').textContent = formatMoney(grossMonth);
- 
+
   const byCat = {};
   rows.forEach(i=>{
     byCat[i.category] = (byCat[i.category]||0) + Number(i.amount||0);
@@ -1241,46 +1507,85 @@ function renderIncome(){
     });
   }
 }
- 
+
 document.querySelector('#incomeTable tbody').addEventListener('click', e=>{
-  const id = e.target.dataset.delIncome;
-  if(id){
-    data.income = data.income.filter(i=>i.id!==id);
+  const delId = e.target.dataset.delIncome;
+  const editId = e.target.dataset.editIncome;
+  if(delId){
+    data.income = data.income.filter(i=>i.id!==delId);
+    if(editingIncomeId===delId){ document.getElementById('incomeForm').reset(); resetIncomeFormState(); }
     saveData(); renderIncome(); renderOverview();
+  }else if(editId){
+    const entry = data.income.find(i=>i.id===editId);
+    if(!entry) return;
+    editingIncomeId = editId;
+    const f = document.getElementById('incomeForm');
+    f.elements.date.value = entry.date;
+    f.elements.category.value = entry.category;
+    f.elements.amount.value = entry.amount;
+    f.elements.notes.value = entry.notes||'';
+    document.getElementById('incomeSubmitBtn').textContent = 'Save changes';
+    document.getElementById('incomeCancelEdit').style.display = 'inline-block';
+    smoothScrollTo(f);
   }
 });
- 
+
 /* ---------------- Expenses ---------------- */
 document.getElementById('expenseForm').addEventListener('submit', e=>{
   e.preventDefault();
   const f = e.target;
   const entryDate = f.elements.date.value;
-  data.expenses.push({
-    id: uid(),
+  const payload = {
     date: entryDate,
     type: f.elements.type.value,
     category: f.elements.category.value.trim(),
     amount: parseFloat(f.elements.amount.value)||0,
     notes: f.elements.notes.value.trim()
-  });
+  };
+  if(editingExpenseId){
+    const entry = data.expenses.find(x=>x.id===editingExpenseId);
+    if(entry) Object.assign(entry, payload);
+    editingExpenseId = null;
+  }else{
+    data.expenses.push({ id: uid(), ...payload });
+  }
   saveData();
   f.reset();
+  resetExpenseFormState();
+  selectedExpenseYear = Number(entryDate.slice(0,4));
   selectedExpenseMonth = monthKey(entryDate) || currentMonthKey();
   renderExpenses(); renderOverview();
   primeDateInput('expenseForm', selectedExpenseMonth);
 });
- 
+function resetExpenseFormState(){
+  editingExpenseId = null;
+  document.getElementById('expenseSubmitBtn').textContent = 'Add entry';
+  document.getElementById('expenseCancelEdit').style.display = 'none';
+}
+document.getElementById('expenseCancelEdit').addEventListener('click', ()=>{
+  document.getElementById('expenseForm').reset();
+  resetExpenseFormState();
+  primeDateInput('expenseForm', selectedExpenseMonth);
+});
+
 function renderExpenses(){
-  if(selectedExpenseMonth === null) selectedExpenseMonth = currentMonthKey();
-  const months = yearMonths();
-  if(!months.includes(selectedExpenseMonth)) selectedExpenseMonth = currentMonthKey();
+  const years = availableYears();
+  if(selectedExpenseYear === null || !years.includes(selectedExpenseYear)) selectedExpenseYear = RESERVE_START_YEAR;
+  renderYearTabs('expenseYearTabs', years, selectedExpenseYear,
+    y => { selectedExpenseYear = y; selectedExpenseMonth = monthsForYear(y)[0]; renderExpenses(); primeDateInput('expenseForm', selectedExpenseMonth); }
+  );
+
+  const months = monthsForYear(selectedExpenseYear);
+  if(selectedExpenseMonth === null || !months.includes(selectedExpenseMonth)){
+    selectedExpenseMonth = months.includes(currentMonthKey()) ? currentMonthKey() : months[0];
+  }
   const mKey = selectedExpenseMonth;
- 
+
   renderMonthTabs('expenseMonthTabs', months, mKey,
     m => data.expenses.some(e=>monthKey(e.date)===m) || autoExpenseEntries(m).length>0,
     m => { selectedExpenseMonth = m; renderExpenses(); primeDateInput('expenseForm', m); }
   );
- 
+
   const tbody = document.querySelector('#expenseTable tbody');
   const manualRows = data.expenses.filter(e=>monthKey(e.date)===mKey);
   const autoRows = autoExpenseEntries(mKey);
@@ -1295,7 +1600,7 @@ function renderExpenses(){
         <td>${escapeHtml(r.category)}</td>
         <td>${escapeHtml(r.notes||'')}</td>
         <td class="num">${formatMoney(r.amount)}</td>
-        <td>${r.auto ? `<span class="auto-hint">via ${r.autoTab === 'loans' ? 'Loans' : 'Investments'}</span>` : `<button class="rowdel" data-del-expense="${r.id}">Delete</button>`}</td>
+        <td>${r.auto ? `<span class="auto-hint">via ${r.autoTab === 'loans' ? 'Loans' : r.autoTab === 'reserves' ? 'Financial Reserves' : 'Investments'}</span>` : `<button class="rowedit" data-edit-expense="${r.id}">Edit</button> <button class="rowdel" data-del-expense="${r.id}">Delete</button>`}</td>
       </tr>
     `).join('');
   }
@@ -1312,7 +1617,7 @@ function renderExpenses(){
   `;
   document.getElementById('expenseRowCount').textContent = rows.length + (rows.length===1 ? ' entry' : ' entries') + (autoTotal>0 ? ` (${formatMoney(autoTotal)} automatic)` : '');
   document.getElementById('expenseMonthTotal').textContent = formatMoney(totalMonth);
- 
+
   const byCat = {};
   rows.forEach(e=>{ byCat[e.category] = (byCat[e.category]||0) + Number(e.amount||0); });
   const labels = Object.keys(byCat);
@@ -1325,7 +1630,7 @@ function renderExpenses(){
       options: { plugins: { legend: { position:'bottom', labels:{ boxWidth:10, padding:12 } } }, cutout: '62%' }
     });
   }
- 
+
   upsertChart('chartFixedVariable', {
     type: 'bar',
     data: {
@@ -1343,36 +1648,76 @@ function renderExpenses(){
     }
   });
 }
- 
+
 document.querySelector('#expenseTable tbody').addEventListener('click', e=>{
-  const id = e.target.dataset.delExpense;
-  if(id){
-    data.expenses = data.expenses.filter(x=>x.id!==id);
+  const delId = e.target.dataset.delExpense;
+  const editId = e.target.dataset.editExpense;
+  if(delId){
+    data.expenses = data.expenses.filter(x=>x.id!==delId);
+    if(editingExpenseId===delId){ document.getElementById('expenseForm').reset(); resetExpenseFormState(); }
     saveData(); renderExpenses(); renderOverview();
+  }else if(editId){
+    const entry = data.expenses.find(x=>x.id===editId);
+    if(!entry) return;
+    editingExpenseId = editId;
+    const f = document.getElementById('expenseForm');
+    f.elements.date.value = entry.date;
+    f.elements.type.value = entry.type;
+    f.elements.category.value = entry.category;
+    f.elements.amount.value = entry.amount;
+    f.elements.notes.value = entry.notes||'';
+    document.getElementById('expenseSubmitBtn').textContent = 'Save changes';
+    document.getElementById('expenseCancelEdit').style.display = 'inline-block';
+    smoothScrollTo(f);
   }
 });
- 
+
 /* ---------------- Investments ---------------- */
 document.getElementById('investForm').addEventListener('submit', e=>{
   e.preventDefault();
   const f = e.target;
-  data.investments.push({
-    id: uid(),
+  const payload = {
     date: f.elements.date.value,
     instrument: f.elements.instrument.value.trim(),
     amount: parseFloat(f.elements.amount.value)||0,
     notes: f.elements.notes.value.trim()
-  });
+  };
+  if(editingInvestId){
+    const entry = data.investments.find(x=>x.id===editingInvestId);
+    if(entry) Object.assign(entry, payload);
+    editingInvestId = null;
+  }else{
+    data.investments.push({ id: uid(), ...payload });
+  }
   saveData();
   f.reset();
+  resetInvestFormState();
+  document.querySelector('#investForm input[name="date"]').value = todayStr();
   renderInvestments(); renderIncome(); renderExpenses(); renderOverview(); renderNetWorth();
 });
- 
+function resetInvestFormState(){
+  editingInvestId = null;
+  document.getElementById('investSubmitBtn').textContent = 'Add entry';
+  document.getElementById('investCancelEdit').style.display = 'none';
+}
+document.getElementById('investCancelEdit').addEventListener('click', ()=>{
+  document.getElementById('investForm').reset();
+  resetInvestFormState();
+  document.querySelector('#investForm input[name="date"]').value = todayStr();
+});
+document.getElementById('investSearch').addEventListener('input', (e)=>{
+  investSearchTerm = e.target.value.trim().toLowerCase();
+  renderInvestments();
+});
+
 function renderInvestments(){
   const tbody = document.querySelector('#investTable tbody');
-  const rows = [...data.investments].sort((a,b)=> b.date.localeCompare(a.date));
+  const allRows = [...data.investments].sort((a,b)=> b.date.localeCompare(a.date));
+  const rows = investSearchTerm
+    ? allRows.filter(r => (r.instrument||'').toLowerCase().includes(investSearchTerm) || (r.notes||'').toLowerCase().includes(investSearchTerm))
+    : allRows;
   if(rows.length===0){
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty">No investment entries yet. Log your first monthly contribution above.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty">${investSearchTerm ? 'No entries match your search.' : 'No investment entries yet. Log your first monthly contribution above.'}</div></td></tr>`;
   }else{
     tbody.innerHTML = rows.map(r=>`
       <tr>
@@ -1380,10 +1725,11 @@ function renderInvestments(){
         <td>${escapeHtml(r.instrument)}</td>
         <td>${escapeHtml(r.notes||'')}</td>
         <td class="num">${formatMoney(r.amount)}</td>
-        <td><button class="rowdel" data-del-invest="${r.id}">Delete</button></td>
+        <td><button class="rowedit" data-edit-invest="${r.id}">Edit</button> <button class="rowdel" data-del-invest="${r.id}">Delete</button></td>
       </tr>
     `).join('');
   }
+  document.getElementById('investRowCount').textContent = rows.length + (rows.length===1 ? ' entry' : ' entries') + (investSearchTerm ? ` matching "${escapeHtml(investSearchTerm)}"` : '');
   const mKey = currentMonthKey();
   const investedMTD = investmentForMonth(mKey);
   document.getElementById('investSummary').innerHTML = `
@@ -1393,7 +1739,7 @@ function renderInvestments(){
     </div>
   `;
   document.getElementById('investTotal').textContent = formatMoney(totalInvested());
- 
+
   const sorted = [...data.investments].sort((a,b)=>a.date.localeCompare(b.date));
   let running = 0;
   const labels = sorted.map(r=>r.date);
@@ -1408,38 +1754,76 @@ function renderInvestments(){
     }
   });
 }
- 
+
 document.querySelector('#investTable tbody').addEventListener('click', e=>{
-  const id = e.target.dataset.delInvest;
-  if(id){
-    data.investments = data.investments.filter(x=>x.id!==id);
+  const delId = e.target.dataset.delInvest;
+  const editId = e.target.dataset.editInvest;
+  if(delId){
+    data.investments = data.investments.filter(x=>x.id!==delId);
+    if(editingInvestId===delId){ document.getElementById('investForm').reset(); resetInvestFormState(); }
     saveData(); renderInvestments(); renderIncome(); renderExpenses(); renderOverview(); renderNetWorth();
+  }else if(editId){
+    const entry = data.investments.find(x=>x.id===editId);
+    if(!entry) return;
+    editingInvestId = editId;
+    const f = document.getElementById('investForm');
+    f.elements.date.value = entry.date;
+    f.elements.instrument.value = entry.instrument;
+    f.elements.amount.value = entry.amount;
+    f.elements.notes.value = entry.notes||'';
+    document.getElementById('investSubmitBtn').textContent = 'Save changes';
+    document.getElementById('investCancelEdit').style.display = 'inline-block';
+    smoothScrollTo(f);
   }
 });
- 
+
 /* ---------------- Assets ---------------- */
 document.getElementById('assetForm').addEventListener('submit', e=>{
   e.preventDefault();
   const f = e.target;
-  data.assets.push({
-    id: uid(),
+  const payload = {
     date: f.elements.date.value,
     name: f.elements.name.value.trim(),
     category: f.elements.category.value.trim(),
     value: parseFloat(f.elements.value.value)||0,
     notes: f.elements.notes.value.trim()
-  });
+  };
+  if(editingAssetId){
+    const entry = data.assets.find(x=>x.id===editingAssetId);
+    if(entry) Object.assign(entry, payload);
+    editingAssetId = null;
+  }else{
+    data.assets.push({ id: uid(), ...payload });
+  }
   saveData();
   f.reset();
+  resetAssetFormState();
   document.querySelector('#assetForm input[name="date"]').value = todayStr();
   renderAssets(); renderOverview(); renderNetWorth();
 });
- 
+function resetAssetFormState(){
+  editingAssetId = null;
+  document.getElementById('assetSubmitBtn').textContent = 'Add asset';
+  document.getElementById('assetCancelEdit').style.display = 'none';
+}
+document.getElementById('assetCancelEdit').addEventListener('click', ()=>{
+  document.getElementById('assetForm').reset();
+  resetAssetFormState();
+  document.querySelector('#assetForm input[name="date"]').value = todayStr();
+});
+document.getElementById('assetSearch').addEventListener('input', (e)=>{
+  assetSearchTerm = e.target.value.trim().toLowerCase();
+  renderAssets();
+});
+
 function renderAssets(){
   const tbody = document.querySelector('#assetsTable tbody');
-  const rows = [...data.assets].sort((a,b)=> b.date.localeCompare(a.date));
+  const allRows = [...data.assets].sort((a,b)=> b.date.localeCompare(a.date));
+  const rows = assetSearchTerm
+    ? allRows.filter(r => (r.name||'').toLowerCase().includes(assetSearchTerm) || (r.category||'').toLowerCase().includes(assetSearchTerm) || (r.notes||'').toLowerCase().includes(assetSearchTerm))
+    : allRows;
   if(rows.length===0){
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty">No assets logged yet. Add gold, property, or anything else you own above.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty">${assetSearchTerm ? 'No assets match your search.' : 'No assets logged yet. Add gold, property, or anything else you own above.'}</div></td></tr>`;
   }else{
     tbody.innerHTML = rows.map(r=>`
       <tr>
@@ -1448,19 +1832,19 @@ function renderAssets(){
         <td>${escapeHtml(r.category)}</td>
         <td>${escapeHtml(r.notes||'')}</td>
         <td class="num">${formatMoney(r.value)}</td>
-        <td><button class="rowdel" data-del-asset="${r.id}">Delete</button></td>
+        <td><button class="rowedit" data-edit-asset="${r.id}">Edit</button> <button class="rowdel" data-del-asset="${r.id}">Delete</button></td>
       </tr>
     `).join('');
   }
-  document.getElementById('assetsRowCount').textContent = rows.length + (rows.length===1 ? ' asset' : ' assets');
+  document.getElementById('assetsRowCount').textContent = rows.length + (rows.length===1 ? ' asset' : ' assets') + (assetSearchTerm ? ` matching "${escapeHtml(assetSearchTerm)}"` : '');
   document.getElementById('assetsTotal').textContent = formatMoney(totalAssets());
   document.getElementById('assetsSummary').innerHTML = `
     <div class="ledger-tape">
       <div class="tape-item neutral"><div class="tlabel">Total asset value</div><div class="tvalue">${formatMoney(totalAssets())}</div></div>
-      <div class="tape-item neutral"><div class="tlabel">Assets logged</div><div class="tvalue">${rows.length}</div></div>
+      <div class="tape-item neutral"><div class="tlabel">Assets logged</div><div class="tvalue">${data.assets.length}</div></div>
     </div>
   `;
- 
+
   const byCategory = {};
   data.assets.forEach(a=>{ byCategory[a.category] = (byCategory[a.category]||0) + Number(a.value||0); });
   const catLabels = Object.keys(byCategory);
@@ -1474,127 +1858,181 @@ function renderAssets(){
     });
   }
 }
- 
+
 document.querySelector('#assetsTable tbody').addEventListener('click', e=>{
-  const id = e.target.dataset.delAsset;
-  if(id){
-    data.assets = data.assets.filter(x=>x.id!==id);
+  const delId = e.target.dataset.delAsset;
+  const editId = e.target.dataset.editAsset;
+  if(delId){
+    data.assets = data.assets.filter(x=>x.id!==delId);
+    if(editingAssetId===delId){ document.getElementById('assetForm').reset(); resetAssetFormState(); }
     saveData(); renderAssets(); renderOverview(); renderNetWorth();
+  }else if(editId){
+    const entry = data.assets.find(x=>x.id===editId);
+    if(!entry) return;
+    editingAssetId = editId;
+    const f = document.getElementById('assetForm');
+    f.elements.date.value = entry.date;
+    f.elements.name.value = entry.name;
+    f.elements.category.value = entry.category;
+    f.elements.value.value = entry.value;
+    f.elements.notes.value = entry.notes||'';
+    document.getElementById('assetSubmitBtn').textContent = 'Save changes';
+    document.getElementById('assetCancelEdit').style.display = 'inline-block';
+    smoothScrollTo(f);
   }
 });
- 
+
 /* ---------------- Savings ---------------- */
 function renderSavings(){
-  const contingencyBal = bucketBalance(data.savings.contingency);
-  const wishlistBal = bucketBalance(data.savings.wishlist);
+  const balance = bucketBalance(data.reserves);
+  const target = Number(data.reserves.target)||0;
+  const pct = target>0 ? Math.min(100, (balance/target)*100) : 0;
+
   document.getElementById('savingsSummary').innerHTML = `
     <div class="ledger-tape">
-      <div class="tape-item savings"><div class="tlabel">Contingency</div><div class="tvalue">${formatMoney(contingencyBal)}</div></div>
-      <div class="tape-item savings"><div class="tlabel">Wishlist</div><div class="tvalue">${formatMoney(wishlistBal)}</div></div>
-      <div class="tape-item neutral"><div class="tlabel">Total savings</div><div class="tvalue">${formatMoney(contingencyBal + wishlistBal)}</div></div>
+      <div class="tape-item savings"><div class="tlabel">Financial Reserves</div><div class="tvalue">${formatMoney(balance)}</div></div>
+      ${target>0 ? `<div class="tape-item neutral"><div class="tlabel">Target</div><div class="tvalue">${formatMoney(target)}</div></div>` : ''}
     </div>
   `;
- 
+
   const wrap = document.getElementById('savingsBuckets');
-  wrap.innerHTML = ['contingency','wishlist'].map(key=>{
-    const bucket = data.savings[key];
-    const label = key==='contingency' ? 'Contingency fund' : 'Wishlist fund';
-    const balance = bucketBalance(bucket);
-    const target = Number(bucket.target)||0;
-    const pct = target>0 ? Math.min(100, (balance/target)*100) : 0;
-    const rows = [...bucket.entries].sort((a,b)=>b.date.localeCompare(a.date));
-    const rowsHtml = rows.length===0
-      ? `<div class="empty">No entries yet.</div>`
-      : `<table>
-          <thead><tr><th>Date</th><th>Notes</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
-          <tbody>
-          ${rows.map(r=>`
-            <tr>
-              <td>${r.date}</td>
-              <td>${escapeHtml(r.notes||'')}</td>
-              <td class="num" style="color:${r.kind==='withdraw'?'var(--red)':'var(--green)'}">${r.kind==='withdraw'?'-':'+'}${formatMoney(r.amount)}</td>
-              <td><button class="rowdel" data-del-savings="${key}:${r.id}">Delete</button></td>
-            </tr>
-          `).join('')}
-          </tbody>
-        </table>`;
- 
-    return `
-      <div class="bucket-card">
-        <div class="bucket-head">
-          <h3>${label}</h3>
-          <div class="bucket-figures"><b>${formatMoney(balance)}</b> ${target>0 ? ' of ' + formatMoney(target) : ''}</div>
-        </div>
-        ${target>0 ? `<div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>` : ''}
-        <div class="bucket-target-row">
-          Target goal
-          <input type="number" step="0.01" min="0" value="${target||''}" placeholder="0.00" data-target="${key}">
-        </div>
- 
-        <form class="form-row" data-savings-form="${key}" style="margin-top:16px;">
-          <div class="field"><label>Date</label><input type="date" name="date" required></div>
-          <div class="field">
-            <label>Type</label>
-            <select name="kind">
-              <option value="deposit">Deposit</option>
-              <option value="withdraw">Withdraw</option>
-            </select>
-          </div>
-          <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
-          <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
-          <button class="btn" type="submit">Add</button>
-        </form>
- 
-        <div class="table-wrap" style="margin-top:14px; padding: 4px 12px;">${rowsHtml}</div>
+  const rows = [...data.reserves.entries].sort((a,b)=>b.date.localeCompare(a.date));
+  const rowsHtml = rows.length===0
+    ? `<div class="empty">No entries yet.</div>`
+    : `<table>
+        <thead><tr><th>Date</th><th>Notes</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
+        <tbody>
+        ${rows.map(r=>`
+          <tr>
+            <td>${r.date}</td>
+            <td>${escapeHtml(r.notes||'')}</td>
+            <td class="num" style="color:${r.kind==='withdraw'?'var(--red)':'var(--green)'}">${r.kind==='withdraw'?'-':'+'}${formatMoney(r.amount)}</td>
+            <td><button class="rowedit" data-edit-savings="${r.id}">Edit</button> <button class="rowdel" data-del-savings="${r.id}">Delete</button></td>
+          </tr>
+        `).join('')}
+        </tbody>
+      </table>`;
+
+  wrap.innerHTML = `
+    <div class="bucket-card">
+      <div class="bucket-head">
+        <h3>Financial Reserves</h3>
+        <div class="bucket-figures"><b>${formatMoney(balance)}</b> ${target>0 ? ' of ' + formatMoney(target) : ''}</div>
       </div>
-    `;
-  }).join('');
- 
-  wrap.querySelectorAll('[data-savings-form]').forEach(form=>{
-    form.addEventListener('submit', e=>{
-      e.preventDefault();
-      const key = form.dataset.savingsForm;
-      const f = e.target;
-      data.savings[key].entries.push({
-        id: uid(), date: f.elements.date.value, kind: f.elements.kind.value,
-        amount: parseFloat(f.elements.amount.value)||0, notes: f.elements.notes.value.trim()
-      });
-      saveData(); renderSavings(); renderOverview(); renderNetWorth();
-    });
+      ${target>0 ? `<div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>` : ''}
+      <div class="bucket-target-row">
+        Target goal
+        <input type="number" step="0.01" min="0" value="${target||''}" placeholder="0.00" id="reservesTargetInput">
+      </div>
+
+      <form class="form-row" id="reservesForm" style="margin-top:16px;">
+        <div class="field"><label>Date</label><input type="date" name="date" required></div>
+        <div class="field">
+          <label>Type</label>
+          <select name="kind">
+            <option value="deposit">Deposit</option>
+            <option value="withdraw">Withdraw</option>
+          </select>
+        </div>
+        <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
+        <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
+        <button class="btn" type="submit" id="reservesSubmitBtn">Add</button>
+        <button class="btn secondary" type="button" id="reservesCancelEdit" style="display:none;">Cancel edit</button>
+      </form>
+
+      <div class="table-wrap" style="margin-top:14px; padding: 4px 12px;">${rowsHtml}</div>
+    </div>
+  `;
+  if(!document.querySelector('#reservesForm input[name="date"]').value){
+    document.querySelector('#reservesForm input[name="date"]').value = todayStr();
+  }
+
+  function resetReservesFormState(){
+    editingReserveId = null;
+    document.getElementById('reservesSubmitBtn').textContent = 'Add';
+    document.getElementById('reservesCancelEdit').style.display = 'none';
+  }
+
+  document.getElementById('reservesForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const f = e.target;
+    const payload = {
+      date: f.elements.date.value, kind: f.elements.kind.value,
+      amount: parseFloat(f.elements.amount.value)||0, notes: f.elements.notes.value.trim()
+    };
+    if(editingReserveId){
+      const entry = data.reserves.entries.find(x=>x.id===editingReserveId);
+      if(entry) Object.assign(entry, payload);
+    }else{
+      data.reserves.entries.push({ id: uid(), ...payload });
+    }
+    resetReservesFormState();
+    saveData(); renderSavings(); renderIncome(); renderExpenses(); renderOverview(); renderNetWorth();
   });
-  wrap.querySelectorAll('[data-target]').forEach(input=>{
-    input.addEventListener('change', ()=>{
-      const key = input.dataset.target;
-      data.savings[key].target = parseFloat(input.value)||0;
-      saveData(); renderSavings();
-    });
+  document.getElementById('reservesCancelEdit').addEventListener('click', ()=>{
+    resetReservesFormState();
+    renderSavings();
+  });
+  document.getElementById('reservesTargetInput').addEventListener('change', (e)=>{
+    data.reserves.target = parseFloat(e.target.value)||0;
+    saveData(); renderSavings();
   });
   wrap.querySelectorAll('[data-del-savings]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const [key, id] = btn.dataset.delSavings.split(':');
-      data.savings[key].entries = data.savings[key].entries.filter(e=>e.id!==id);
-      saveData(); renderSavings(); renderOverview(); renderNetWorth();
+      data.reserves.entries = data.reserves.entries.filter(e=>e.id!==btn.dataset.delSavings);
+      if(editingReserveId===btn.dataset.delSavings) editingReserveId = null;
+      saveData(); renderSavings(); renderIncome(); renderExpenses(); renderOverview(); renderNetWorth();
+    });
+  });
+  wrap.querySelectorAll('[data-edit-savings]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const entry = data.reserves.entries.find(x=>x.id===btn.dataset.editSavings);
+      if(!entry) return;
+      editingReserveId = entry.id;
+      const f = document.getElementById('reservesForm');
+      f.elements.date.value = entry.date;
+      f.elements.kind.value = entry.kind;
+      f.elements.amount.value = entry.amount;
+      f.elements.notes.value = entry.notes||'';
+      document.getElementById('reservesSubmitBtn').textContent = 'Save changes';
+      document.getElementById('reservesCancelEdit').style.display = 'inline-block';
+      smoothScrollTo(f);
     });
   });
 }
- 
+
 /* ---------------- Loans ---------------- */
 document.getElementById('loanForm').addEventListener('submit', e=>{
   e.preventDefault();
   const f = e.target;
-  data.loans.push({
-    id: uid(),
+  const payload = {
     name: f.elements.name.value.trim(),
     opening: parseFloat(f.elements.opening.value)||0,
     rate: parseFloat(f.elements.rate.value)||0,
-    start: f.elements.start.value,
-    repayments: []
-  });
+    start: f.elements.start.value
+  };
+  if(editingLoanId){
+    const loan = data.loans.find(l=>l.id===editingLoanId);
+    if(loan) Object.assign(loan, payload);
+    editingLoanId = null;
+  }else{
+    data.loans.push({ id: uid(), ...payload, repayments: [] });
+  }
   saveData();
   f.reset();
+  resetLoanFormState();
   renderLoans(); renderExpenses(); renderOverview(); renderNetWorth();
 });
- 
+function resetLoanFormState(){
+  editingLoanId = null;
+  document.getElementById('loanSubmitBtn').textContent = 'Add loan';
+  document.getElementById('loanCancelEdit').style.display = 'none';
+}
+document.getElementById('loanCancelEdit').addEventListener('click', ()=>{
+  document.getElementById('loanForm').reset();
+  resetLoanFormState();
+});
+
 function renderLoans(){
   const totalOpening = sumBy(data.loans, l=>l.opening);
   const totalRemaining = totalLoanRemaining();
@@ -1611,7 +2049,7 @@ function renderLoans(){
       </div>
     `;
   }
- 
+
   const wrap = document.getElementById('loansList');
   if(data.loans.length===0){
     wrap.innerHTML = `<div class="empty">No loans added yet. Add one above to start tracking repayments.</div>`;
@@ -1632,12 +2070,12 @@ function renderLoans(){
               <td>${r.date}</td>
               <td>${escapeHtml(r.notes||'')}</td>
               <td class="num">${formatMoney(r.amount)}</td>
-              <td><button class="rowdel" data-del-repay="${loan.id}:${r.id}">Delete</button></td>
+              <td><button class="rowedit" data-edit-repay="${loan.id}:${r.id}">Edit</button> <button class="rowdel" data-del-repay="${loan.id}:${r.id}">Delete</button></td>
             </tr>
           `).join('')}
           </tbody>
         </table>`;
- 
+
     return `
       <div class="loan-card">
         <div class="loan-head">
@@ -1649,30 +2087,70 @@ function renderLoans(){
             <div class="rem">${formatMoney(remaining)}</div>
             <div class="lbl">remaining of ${formatMoney(loan.opening)}</div>
           </div>
+          <button class="loan-del" data-edit-loan="${loan.id}" style="border-color:var(--teal-dim); color:var(--teal);">Edit loan</button>
           <button class="loan-del" data-del-loan="${loan.id}">Delete loan</button>
         </div>
         <div class="progress-track"><div class="progress-fill gold" style="width:${pct}%"></div></div>
- 
+
         <form class="form-row" data-repay-form="${loan.id}" style="margin-top:16px;">
           <div class="field"><label>Date</label><input type="date" name="date" required></div>
           <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
           <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
-          <button class="btn" type="submit">Log repayment</button>
+          <button class="btn" type="submit" data-repay-submit="${loan.id}">Log repayment</button>
+          <button class="btn secondary" type="button" data-repay-cancel="${loan.id}" style="display:none;">Cancel edit</button>
         </form>
- 
+
         <div class="table-wrap" style="margin-top:14px; padding: 4px 12px;">${rowsHtml}</div>
       </div>
     `;
   }).join('');
- 
+
+  function resetRepayFormState(loanId){
+    if(editingRepayment && editingRepayment.loanId===loanId) editingRepayment = null;
+    const submitBtn = wrap.querySelector(`[data-repay-submit="${loanId}"]`);
+    const cancelBtn = wrap.querySelector(`[data-repay-cancel="${loanId}"]`);
+    if(submitBtn) submitBtn.textContent = 'Log repayment';
+    if(cancelBtn) cancelBtn.style.display = 'none';
+  }
+
   wrap.querySelectorAll('[data-repay-form]').forEach(form=>{
     form.addEventListener('submit', e=>{
       e.preventDefault();
       const loanId = form.dataset.repayForm;
       const f = e.target;
       const loan = data.loans.find(l=>l.id===loanId);
-      loan.repayments.push({ id: uid(), date: f.elements.date.value, amount: parseFloat(f.elements.amount.value)||0, notes: f.elements.notes.value.trim() });
+      const payload = { date: f.elements.date.value, amount: parseFloat(f.elements.amount.value)||0, notes: f.elements.notes.value.trim() };
+      if(editingRepayment && editingRepayment.loanId===loanId){
+        const rep = loan.repayments.find(r=>r.id===editingRepayment.repayId);
+        if(rep) Object.assign(rep, payload);
+        editingRepayment = null;
+      }else{
+        loan.repayments.push({ id: uid(), ...payload });
+      }
       saveData(); renderLoans(); renderExpenses(); renderOverview(); renderNetWorth();
+    });
+  });
+  wrap.querySelectorAll('[data-repay-cancel]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      resetRepayFormState(btn.dataset.repayCancel);
+      const form = wrap.querySelector(`[data-repay-form="${btn.dataset.repayCancel}"]`);
+      if(form) form.reset();
+    });
+  });
+  wrap.querySelectorAll('[data-edit-repay]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [loanId, repayId] = btn.dataset.editRepay.split(':');
+      const loan = data.loans.find(l=>l.id===loanId);
+      const rep = loan && loan.repayments.find(r=>r.id===repayId);
+      if(!rep) return;
+      editingRepayment = { loanId, repayId };
+      const form = wrap.querySelector(`[data-repay-form="${loanId}"]`);
+      form.elements.date.value = rep.date;
+      form.elements.amount.value = rep.amount;
+      form.elements.notes.value = rep.notes||'';
+      wrap.querySelector(`[data-repay-submit="${loanId}"]`).textContent = 'Save changes';
+      wrap.querySelector(`[data-repay-cancel="${loanId}"]`).style.display = 'inline-block';
+      smoothScrollTo(form);
     });
   });
   wrap.querySelectorAll('[data-del-repay]').forEach(btn=>{
@@ -1680,40 +2158,57 @@ function renderLoans(){
       const [loanId, repayId] = btn.dataset.delRepay.split(':');
       const loan = data.loans.find(l=>l.id===loanId);
       loan.repayments = loan.repayments.filter(r=>r.id!==repayId);
+      if(editingRepayment && editingRepayment.loanId===loanId && editingRepayment.repayId===repayId) editingRepayment = null;
       saveData(); renderLoans(); renderExpenses(); renderOverview(); renderNetWorth();
+    });
+  });
+  wrap.querySelectorAll('[data-edit-loan]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const loan = data.loans.find(l=>l.id===btn.dataset.editLoan);
+      if(!loan) return;
+      editingLoanId = loan.id;
+      const f = document.getElementById('loanForm');
+      f.elements.name.value = loan.name;
+      f.elements.opening.value = loan.opening;
+      f.elements.rate.value = loan.rate||'';
+      f.elements.start.value = loan.start;
+      document.getElementById('loanSubmitBtn').textContent = 'Save changes';
+      document.getElementById('loanCancelEdit').style.display = 'inline-block';
+      smoothScrollTo(f);
     });
   });
   wrap.querySelectorAll('[data-del-loan]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       if(!confirm('Delete this loan and all its repayment history?')) return;
       data.loans = data.loans.filter(l=>l.id!==btn.dataset.delLoan);
+      if(editingLoanId===btn.dataset.delLoan){ document.getElementById('loanForm').reset(); resetLoanFormState(); }
       saveData(); renderLoans(); renderExpenses(); renderOverview(); renderNetWorth();
     });
   });
 }
- 
+
 /* ---------------- Google Drive Sync ---------------- */
 const GOOGLE_CLIENT_ID = '318904077361-ptmeidufaf9i36msfn0r8lrvuuqqbp72.apps.googleusercontent.com';
 const DRIVE_FILE_NAME = 'ledger-dashboard-backup.json';
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
- 
+
 let driveAccessToken = null;
 let driveFileId = null;
 let driveTokenClient = null;
 let driveSyncTimer = null;
- 
+
 const driveStatusEl = document.getElementById('driveStatus');
 const driveConnectBtn = document.getElementById('driveConnectBtn');
 const driveSyncBtn = document.getElementById('driveSyncBtn');
- 
+
 function setDriveStatus(text){
   if(driveStatusEl) driveStatusEl.textContent = 'Drive: ' + text;
 }
- 
+
 function driveApiReady(){
   return typeof google !== 'undefined' && google.accounts && google.accounts.oauth2;
 }
- 
+
 driveConnectBtn.addEventListener('click', ()=>{
   if(!driveApiReady()){
     alert('Google\'s sign-in library did not load. Check your internet connection and try again, or this page may not be served from an address Google has authorized yet.');
@@ -1739,7 +2234,7 @@ driveConnectBtn.addEventListener('click', ()=>{
   }
   driveTokenClient.requestAccessToken();
 });
- 
+
 async function driveFindFile(){
   const q = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
   const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)`, {
@@ -1749,7 +2244,7 @@ async function driveFindFile(){
   const json = await res.json();
   return json.files && json.files[0] ? json.files[0] : null;
 }
- 
+
 async function driveDownloadFile(fileId){
   const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
     headers: { Authorization: 'Bearer ' + driveAccessToken }
@@ -1757,7 +2252,7 @@ async function driveDownloadFile(fileId){
   if(!res.ok) throw new Error('Drive download failed (' + res.status + ')');
   return res.json();
 }
- 
+
 async function driveCreateFile(payload){
   const boundary = 'ledgerdash' + uid();
   const metadata = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
@@ -1774,7 +2269,7 @@ async function driveCreateFile(payload){
   const json = await res.json();
   return json.id;
 }
- 
+
 async function driveUpdateFile(fileId, payload){
   const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
     method: 'PATCH',
@@ -1783,24 +2278,55 @@ async function driveUpdateFile(fileId, payload){
   });
   if(!res.ok) throw new Error('Drive update failed (' + res.status + ')');
 }
- 
+
+// Custom-styled choice modal instead of a bare browser confirm() — the two
+// outcomes look and read differently on purpose, so it's hard to pick the
+// wrong one by accident. Resolves true = load Drive backup, false = keep
+// this device's data and overwrite Drive.
+function showDriveChoiceModal(existingFile){
+  return new Promise(resolve=>{
+    const counts = `${data.income.length} income, ${data.expenses.length} expense, `
+      + `${data.investments.length} investment, ${data.assets.length} asset, ${data.loans.length} loan `
+      + `${data.loans.length===1 ? 'entry' : 'entries'} currently on this device`;
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <h3>Google Drive backup found</h3>
+        <p>Your Drive backup was last updated <b>${new Date(existingFile.modifiedTime).toLocaleString()}</b>.<br>This device has: ${counts}.</p>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn safe" data-choice="remote">
+            <span class="mb-title">⬇ Load the Drive backup onto this device</span>
+            <span class="mb-sub">Replaces what's on this device with your Drive backup. Pick this on a new browser or device.</span>
+          </button>
+          <button type="button" class="modal-btn danger" data-choice="local">
+            <span class="mb-title">⬆ Keep this device's data, overwrite Drive</span>
+            <span class="mb-sub">Erases the Drive backup shown above and replaces it with what's on this device. Only pick this if this device is the more up-to-date one.</span>
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelectorAll('[data-choice]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.body.removeChild(overlay);
+        resolve(btn.dataset.choice === 'remote');
+      });
+    });
+  });
+}
+
 async function driveInitialSync(){
   try{
     const existing = await driveFindFile();
     if(existing){
       driveFileId = existing.id;
-      const useRemote = confirm(
-        'Found an existing backup in your Google Drive (last updated ' + new Date(existing.modifiedTime).toLocaleString() + ').\n\n' +
-        'OK = Load that backup (replaces what\'s on this device)\n' +
-        'Cancel = Keep what\'s on this device and overwrite the Drive backup with it'
-      );
+      const useRemote = await showDriveChoiceModal(existing);
       if(useRemote){
         const remoteData = await driveDownloadFile(driveFileId);
         data = Object.assign(defaultData(), remoteData, {
-          savings: {
-            contingency: Object.assign({target:0, entries:[]}, remoteData.savings?.contingency),
-            wishlist: Object.assign({target:0, entries:[]}, remoteData.savings?.wishlist)
-          }
+          assets: remoteData.assets || [],
+          reserves: migrateReserves(remoteData)
         });
         saveData();
         currencySelect.value = data.currency;
@@ -1817,7 +2343,7 @@ async function driveInitialSync(){
     setDriveStatus('connected — sync failed, see console');
   }
 }
- 
+
 async function driveSyncNow(){
   if(!driveAccessToken){ return; }
   try{
@@ -1833,9 +2359,9 @@ async function driveSyncNow(){
     setDriveStatus('connected — sync failed, see console');
   }
 }
- 
+
 driveSyncBtn.addEventListener('click', driveSyncNow);
- 
+
 // auto-sync a few seconds after any change, so we don't hammer the API on every keystroke
 function scheduleDriveSync(){
   if(!driveAccessToken) return;
@@ -1847,7 +2373,7 @@ saveData = function(){
   _originalSaveData();
   scheduleDriveSync();
 };
- 
+
 /* ---------------- Export / Reset ---------------- */
 document.getElementById('exportBtn').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
@@ -1865,7 +2391,7 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   currencySelect.value = data.currency;
   renderAll();
 });
- 
+
 document.getElementById('importBtn').addEventListener('click', ()=>{
   document.getElementById('importFile').click();
 });
@@ -1885,7 +2411,7 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
     const looksValid = parsed && typeof parsed === 'object' &&
       Array.isArray(parsed.income) && Array.isArray(parsed.expenses) &&
       Array.isArray(parsed.investments) && Array.isArray(parsed.loans) &&
-      parsed.savings && typeof parsed.savings === 'object';
+      (parsed.reserves || parsed.savings);
     if(!looksValid){
       alert('This file doesn\'t look like a Ledger backup. Import cancelled — nothing was changed.');
       e.target.value = '';
@@ -1899,10 +2425,7 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
     if(replace){
       data = Object.assign(defaultData(), parsed, {
         assets: parsed.assets || [],
-        savings: {
-          contingency: Object.assign({target:0, entries:[]}, parsed.savings?.contingency),
-          wishlist: Object.assign({target:0, entries:[]}, parsed.savings?.wishlist)
-        }
+        reserves: migrateReserves(parsed)
       });
     }else{
       data.income.push(...(parsed.income||[]));
@@ -1910,13 +2433,9 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
       data.investments.push(...(parsed.investments||[]));
       data.assets.push(...(parsed.assets||[]));
       data.loans.push(...(parsed.loans||[]));
-      ['contingency','wishlist'].forEach(key=>{
-        const incoming = parsed.savings?.[key];
-        if(incoming){
-          data.savings[key].entries.push(...(incoming.entries||[]));
-          if(!data.savings[key].target && incoming.target) data.savings[key].target = incoming.target;
-        }
-      });
+      const incomingReserves = migrateReserves(parsed);
+      data.reserves.entries.push(...incomingReserves.entries);
+      if(!data.reserves.target && incomingReserves.target) data.reserves.target = incomingReserves.target;
     }
     saveData();
     currencySelect.value = data.currency;
@@ -1930,12 +2449,12 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
   };
   reader.readAsText(file);
 });
- 
+
 /* ---------------- Utility ---------------- */
 function escapeHtml(str){
   return String(str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
- 
+
 /* ---------------- Init ---------------- */
 function renderAll(){
   renderOverview();
@@ -1947,10 +2466,144 @@ function renderAll(){
   renderLoans();
   renderNetWorth();
 }
- 
+
 // default today's date on all date inputs for convenience
 document.querySelectorAll('input[type=date]').forEach(inp=>{ if(!inp.value) inp.value = todayStr(); });
- 
+
+/* ---------------- PIN gate ---------------- */
+// A lightweight deterrent, not real security: the PIN is only hashed with a
+// simple non-cryptographic hash, purely so it isn't sitting in localStorage
+// as plain text. Anyone with real access to this browser's devtools could
+// bypass it. It's meant to stop a casual glance, not a determined snoop —
+// and it never touches the actual financial data, so losing the PIN just
+// means resetting the lock, not losing any entries.
+const PIN_STORAGE_KEY = 'ledgerDashboard_pin_v1';
+let pinGateChangeMode = false; // true = re-verifying old PIN before setting a new one
+
+function simpleHash(str){
+  let hash = 0;
+  for(let i=0;i<str.length;i++){
+    hash = ((hash<<5)-hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return String(hash);
+}
+function getStoredPinHash(){ try{ return localStorage.getItem(PIN_STORAGE_KEY); }catch(e){ return null; } }
+function setStoredPinHash(hash){ try{ localStorage.setItem(PIN_STORAGE_KEY, hash); }catch(e){} }
+function clearStoredPinHash(){ try{ localStorage.removeItem(PIN_STORAGE_KEY); }catch(e){} }
+
+function updatePinButtons(){
+  const hasPin = !!getStoredPinHash();
+  document.getElementById('managePinBtn').textContent = hasPin ? '🔒 Change PIN' : '🔒 Set PIN lock';
+  document.getElementById('lockNowBtn').style.display = hasPin ? 'inline-block' : 'none';
+}
+
+function closePinGate(){
+  document.getElementById('pinGateOverlay').style.display = 'none';
+  pinGateChangeMode = false;
+  updatePinButtons();
+}
+
+function renderPinSetupScreen(){
+  const box = document.getElementById('pinGateBox');
+  box.innerHTML = `
+    <h3>${pinGateChangeMode ? 'Set a new PIN' : 'Protect this dashboard'}</h3>
+    <p>Choose a short PIN. This just hides the dashboard behind a lock screen on this device/browser — it doesn't encrypt your data, so it's a deterrent against a casual glance, not real security.</p>
+    <form id="pinSetupForm">
+      <div class="field" style="margin-bottom:10px;"><label>New PIN</label><input type="password" inputmode="numeric" id="pinSetupValue" placeholder="e.g. 4–8 digits" required minlength="4"></div>
+      <div class="field" style="margin-bottom:16px;"><label>Confirm PIN</label><input type="password" inputmode="numeric" id="pinSetupConfirm" placeholder="Repeat it" required minlength="4"></div>
+      <div id="pinSetupError" style="color:var(--red); font-size:12px; margin-bottom:12px; display:none;"></div>
+      <div class="modal-actions">
+        <button type="submit" class="modal-btn safe"><span class="mb-title">Set PIN</span></button>
+        <button type="button" id="pinSetupSkip" class="modal-btn danger"><span class="mb-title">${pinGateChangeMode ? 'Cancel' : 'Skip for now'}</span></button>
+      </div>
+    </form>
+  `;
+  document.getElementById('pinSetupForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const val = document.getElementById('pinSetupValue').value;
+    const confirmVal = document.getElementById('pinSetupConfirm').value;
+    const errEl = document.getElementById('pinSetupError');
+    if(val.length<4){ errEl.textContent = 'PIN must be at least 4 characters.'; errEl.style.display='block'; return; }
+    if(val!==confirmVal){ errEl.textContent = "PINs don't match."; errEl.style.display='block'; return; }
+    setStoredPinHash(simpleHash(val));
+    closePinGate();
+  });
+  document.getElementById('pinSetupSkip').addEventListener('click', ()=>{
+    closePinGate();
+  });
+}
+
+function renderPinUnlockScreen(){
+  const box = document.getElementById('pinGateBox');
+  box.innerHTML = `
+    <h3>Enter PIN</h3>
+    <p>This dashboard is locked. Enter your PIN to continue.</p>
+    <form id="pinUnlockForm">
+      <div class="field" style="margin-bottom:14px;"><label>PIN</label><input type="password" inputmode="numeric" id="pinUnlockValue" placeholder="Enter PIN" required autofocus></div>
+      <div id="pinUnlockError" style="color:var(--red); font-size:12px; margin-bottom:12px; display:none;">Incorrect PIN — try again.</div>
+      <div class="modal-actions">
+        <button type="submit" class="modal-btn safe"><span class="mb-title">Unlock</span></button>
+      </div>
+    </form>
+    <p style="margin-top:16px; margin-bottom:0;"><a href="#" id="pinForgotLink" style="color:var(--text-muted); font-size:11.5px;">Forgot PIN? Reset the lock (your data is safe)</a></p>
+  `;
+  document.getElementById('pinUnlockForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const val = document.getElementById('pinUnlockValue').value;
+    if(simpleHash(val) === getStoredPinHash()){
+      if(pinGateChangeMode){
+        renderPinSetupScreen();
+      }else{
+        closePinGate();
+      }
+    }else{
+      document.getElementById('pinUnlockError').style.display = 'block';
+      document.getElementById('pinUnlockValue').value = '';
+      document.getElementById('pinUnlockValue').focus();
+    }
+  });
+  document.getElementById('pinForgotLink').addEventListener('click', (e)=>{
+    e.preventDefault();
+    if(confirm('This removes the PIN lock only — none of your financial data is affected. Continue?')){
+      clearStoredPinHash();
+      closePinGate();
+    }
+  });
+}
+
+function openPinGate(){
+  document.getElementById('pinGateOverlay').style.display = 'flex';
+  if(getStoredPinHash()){
+    renderPinUnlockScreen();
+  }else{
+    renderPinSetupScreen();
+  }
+}
+
+document.getElementById('managePinBtn').addEventListener('click', ()=>{
+  pinGateChangeMode = !!getStoredPinHash();
+  openPinGate();
+});
+document.getElementById('lockNowBtn').addEventListener('click', ()=>{
+  pinGateChangeMode = false;
+  openPinGate();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key.toLowerCase()==='l' && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName) && getStoredPinHash()){
+    pinGateChangeMode = false;
+    openPinGate();
+  }
+});
+
+updatePinButtons();
+// Only block the dashboard on load if a PIN was previously set — brand-new
+// users see the dashboard immediately and can opt in from the sidebar.
+if(getStoredPinHash()){
+  pinGateChangeMode = false;
+  openPinGate();
+}
+
 renderAll();
 </script>
 </body>
