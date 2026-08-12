@@ -607,6 +607,7 @@ window.addEventListener('error', function(e){
     <button class="navbtn" data-tab="savings"><span class="dot"></span> Financial Reserves</button>
     <button class="navbtn" data-tab="loans"><span class="dot"></span> Loans</button>
     <button class="navbtn" data-tab="budgets"><span class="dot"></span> Budgets</button>
+    <button class="navbtn" data-tab="creditcards"><span class="dot"></span> Credit Cards</button>
     <button class="navbtn" data-tab="networth"><span class="dot"></span> Net Worth</button>
     <div class="sidebar-foot">
       <div id="driveStatus" style="font-size:11px; color:var(--text-muted); padding: 2px 10px 4px;">Drive: not connected</div>
@@ -717,7 +718,7 @@ window.addEventListener('error', function(e){
     <!-- EXPENSES -->
     <section class="tab" id="tab-expenses">
       <h2 class="tabtitle">Expenses</h2>
-      <p class="tabdesc">Log daily spending — fixed commitments and variable day-to-day costs. Investment contributions and loan EMIs from those tabs are added here automatically.</p>
+      <p class="tabdesc">Log daily spending — fixed commitments and variable day-to-day costs. Investment contributions and loan EMIs from those tabs are added here automatically. Pay via Income to debit your Balance immediately, or via a card to add it to that card's outstanding balance instead — the Balance only moves when you log the card payment.</p>
 
       <div class="month-tabs" id="expenseYearTabs"></div>
       <div class="month-tabs" id="expenseMonthTabs"></div>
@@ -743,6 +744,12 @@ window.addEventListener('error', function(e){
           </datalist>
         </div>
         <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
+        <div class="field">
+          <label>Paid via</label>
+          <select name="paymentMethod" id="expensePaymentMethod">
+            <option value="income" selected>Income / Cash</option>
+          </select>
+        </div>
         <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
         <button class="btn" type="submit" id="expenseSubmitBtn">Add entry</button>
         <button class="btn secondary" type="button" id="expenseCancelEdit" style="display:none;">Cancel edit</button>
@@ -750,7 +757,7 @@ window.addEventListener('error', function(e){
 
       <div class="table-wrap">
         <table id="expenseTable">
-          <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Notes</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
+          <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Paid via</th><th>Notes</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
         <div class="table-foot"><span id="expenseRowCount">—</span><span class="total" id="expenseMonthTotal">—</span></div>
@@ -939,6 +946,23 @@ window.addEventListener('error', function(e){
       <div id="budgetsList"></div>
     </section>
 
+    <!-- CREDIT CARDS -->
+    <section class="tab" id="tab-creditcards">
+      <h2 class="tabtitle">Credit Cards</h2>
+      <p class="tabdesc">Expenses paid via a card here add to that card's outstanding balance instead of debiting your Balance right away. Log a payment when you pay your bill (mid-month or start of month) — that's when it actually hits your Balance, and the card's outstanding drops accordingly.</p>
+
+      <div class="tab-summary" id="creditCardsSummary"></div>
+
+      <form class="form-row" id="cardForm">
+        <div class="field"><label>Card name</label><input type="text" name="name" placeholder="e.g. Chase Sapphire" required></div>
+        <div class="field"><label>Credit limit <span style="opacity:.6;">(optional)</span></label><input type="number" name="limit" step="0.01" min="0" placeholder="0.00"></div>
+        <button class="btn" type="submit" id="cardSubmitBtn">Add card</button>
+        <button class="btn secondary" type="button" id="cardCancelEdit" style="display:none;">Cancel edit</button>
+      </form>
+
+      <div id="cardsList"></div>
+    </section>
+
     <!-- NET WORTH -->
     <section class="tab" id="tab-networth">
       <div class="ledger-hero">
@@ -985,7 +1009,8 @@ function defaultData(){
     assets: [],
     reserves: { target: 0, entries: [] },
     loans: [],
-    budgets: []
+    budgets: [],
+    creditCards: []
   };
 }
 
@@ -1006,6 +1031,8 @@ let editingLoanId = null;
 let editingRepayment = null; // { loanId, repayId }
 let editingValuationId = null;
 let editingBudgetId = null;
+let editingCardId = null;
+let editingCardPayment = null; // { cardId, paymentId }
 
 let investSearchTerm = '';
 let assetSearchTerm = '';
@@ -1165,14 +1192,44 @@ function loanRemainingAt(loan, asOfDateStr){
   const paidToDate = sumBy((loan.repayments||[]).filter(r=>r.date<=asOfDateStr), r=>r.amount);
   return Math.max(0, (Number(loan.opening)||0) - paidToDate);
 }
+// "Current" figures use end-of-this-month as the cutoff (not literal today),
+// so an entry dated anywhere within the current month — even a few days
+// ahead of today — is reflected immediately, consistent with how Balance
+// and Net Worth already treat "this month." Using literal today here would
+// make this quietly disagree with those other figures.
 function loanRemaining(loan){
-  return loanRemainingAt(loan, todayStr());
+  return loanRemainingAt(loan, endOfMonth(currentMonthKey()));
 }
 function totalLoanRemaining(){
   return sumBy(data.loans, l=>loanRemaining(l));
 }
 function totalLoanRepaidActual(){
   return sumBy(data.loans.flatMap(l=>l.repayments||[]), r=>r.amount);
+}
+// Credit cards: an expense tagged to a card doesn't touch cash/Balance when
+// logged — it adds to that card's outstanding balance instead. Only logging
+// an actual payment against the card debits Balance and reduces outstanding.
+function cardOutstandingAt(card, asOfDate){
+  const spent = sumBy(data.expenses.filter(e=>e.paymentMethod===card.id && e.date<=asOfDate), e=>e.amount);
+  const paid = sumBy((card.payments||[]).filter(p=>p.date<=asOfDate), p=>p.amount);
+  return Math.max(0, spent - paid);
+}
+function cardOutstanding(card){
+  return cardOutstandingAt(card, endOfMonth(currentMonthKey()));
+}
+function totalCardOutstanding(asOfDate){
+  const cutoff = asOfDate || endOfMonth(currentMonthKey());
+  return sumBy(data.creditCards, c=>cardOutstandingAt(c, cutoff));
+}
+// Keeps the Expense form's "Paid via" dropdown in sync with the current list
+// of cards, without clobbering whatever's currently selected.
+function refreshPaymentMethodOptions(){
+  const sel = document.getElementById('expensePaymentMethod');
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = `<option value="income">Income / Cash</option>` +
+    data.creditCards.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  sel.value = [...sel.options].some(o=>o.value===current) ? current : 'income';
 }
 function bucketBalance(bucket){
   return sumBy(bucket.entries, e => e.kind==='withdraw' ? -e.amount : e.amount);
@@ -1260,15 +1317,27 @@ function expenseForMonth(mKey){
   const auto = sumBy(autoExpenseEntries(mKey), e=>e.amount);
   return manual + auto;
 }
-// "Essential" spend for runway purposes: manual expenses + loan EMIs, since
-// those are costs you'd still have in an emergency. Investment contributions
-// and Reserve deposits are excluded on purpose — those are things you'd
-// choose to stop, not survival costs, so including them would understate
-// how long the reserve fund would actually last.
+// Cash-only version of the above, for Overview/Balance purposes: card-paid
+// expenses don't count here (they haven't left your cash yet), but paying
+// off a card bill does — that's a real cash outflow for the month it happens.
+function cashExpenseForMonth(mKey){
+  const cashManual = sumBy(data.expenses.filter(e=>monthKey(e.date)===mKey && (!e.paymentMethod||e.paymentMethod==='income')), e=>e.amount);
+  const auto = sumBy(autoExpenseEntries(mKey), e=>e.amount);
+  const cardPayments = sumBy(data.creditCards.flatMap(c=>c.payments||[]).filter(p=>monthKey(p.date)===mKey), p=>p.amount);
+  return cashManual + auto + cardPayments;
+}
+// "Essential" spend for runway purposes: cash expenses + loan EMIs + credit
+// card bill payments, since those are the actual cash outflows you'd still
+// have in an emergency. Investment contributions and Reserve deposits are
+// excluded on purpose — those are things you'd choose to stop, not survival
+// costs, so including them would understate how long the reserve fund would
+// actually last. Card-tagged expenses themselves aren't counted either —
+// only the payment against the card is, to avoid double-counting.
 function essentialExpenseForMonth(mKey){
-  const manual = sumBy(data.expenses.filter(e=>monthKey(e.date)===mKey), e=>e.amount);
+  const cashManual = sumBy(data.expenses.filter(e=>monthKey(e.date)===mKey && (!e.paymentMethod||e.paymentMethod==='income')), e=>e.amount);
   const emis = sumBy(data.loans.flatMap(l=>l.repayments||[]).filter(r=>monthKey(r.date)===mKey), r=>r.amount);
-  return manual + emis;
+  const cardPayments = sumBy(data.creditCards.flatMap(c=>c.payments||[]).filter(p=>monthKey(p.date)===mKey), p=>p.amount);
+  return cashManual + emis + cardPayments;
 }
 function averageMonthlyEssentialSpend(monthsBack){
   const months = last6MonthKeys().slice(-monthsBack);
@@ -1305,7 +1374,9 @@ function investmentForMonth(mKey){
 function cashBalanceThrough(mKey){
   const monthEnd = endOfMonth(mKey);
   const incomeToDate = sumBy(data.income.filter(i=>i.date<=monthEnd), i=>i.amount);
-  const expenseToDate = sumBy(data.expenses.filter(e=>e.date<=monthEnd), e=>e.amount);
+  const cashExpenseToDate = sumBy(
+    data.expenses.filter(e=>e.date<=monthEnd && (!e.paymentMethod||e.paymentMethod==='income')), e=>e.amount
+  );
   const investedToDate = sumBy(data.investments.filter(i=>i.date<=monthEnd), i=>i.amount);
   const repaidToDate = sumBy(
     data.loans.flatMap(l=>l.repayments||[]).filter(r=>r.date<=monthEnd),
@@ -1317,7 +1388,10 @@ function cashBalanceThrough(mKey){
   const reserveWithdrawalsToDate = sumBy(
     data.reserves.entries.filter(e=>e.kind==='withdraw' && e.date<=monthEnd), e=>e.amount
   );
-  return incomeToDate + reserveWithdrawalsToDate - expenseToDate - investedToDate - repaidToDate - reserveDepositsToDate;
+  const cardPaymentsToDate = sumBy(
+    data.creditCards.flatMap(c=>c.payments||[]).filter(p=>p.date<=monthEnd), p=>p.amount
+  );
+  return incomeToDate + reserveWithdrawalsToDate - cashExpenseToDate - investedToDate - repaidToDate - reserveDepositsToDate - cardPaymentsToDate;
 }
 function netWorthAt(monthKey){
   const monthEnd = endOfMonth(monthKey);
@@ -1327,7 +1401,7 @@ function netWorthAt(monthKey){
     data.reserves.entries.filter(e=>e.date<=monthEnd),
     e => e.kind==='withdraw' ? -e.amount : e.amount
   );
-  const liabilities = sumBy(data.loans.filter(l=>l.start<=monthEnd), l=>loanRemainingAt(l, monthEnd));
+  const liabilities = sumBy(data.loans.filter(l=>l.start<=monthEnd), l=>loanRemainingAt(l, monthEnd)) + totalCardOutstanding(monthEnd);
   return (investmentsToDate + assetsToDate + reservesToDate) - liabilities;
 }
 
@@ -1366,7 +1440,8 @@ const tabTitles = {
   savings: ['Financial Reserves', 'Deposits debit income, withdrawals credit it back'],
   loans: ['Loans', 'Opening balances and repayment progress'],
   budgets: ['Budgets', 'Monthly targets vs. actual spend by category'],
-  networth: ['Net Worth', 'Investments, assets, and savings minus loans']
+  creditcards: ['Credit Cards', 'Card spend, outstanding balances, and payments'],
+  networth: ['Net Worth', 'Investments, assets, and savings minus loans and cards']
 };
 document.querySelectorAll('.navbtn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1415,7 +1490,7 @@ applyPrivacyMode();
 function renderOverview(){
   const mKey = currentMonthKey();
   const incomeMTD = incomeForMonth(mKey);
-  const expenseMTD = expenseForMonth(mKey);
+  const expenseMTD = cashExpenseForMonth(mKey);
   const balance = cashBalanceThrough(mKey);
 
   const balEl = document.getElementById('balanceValue');
@@ -1425,19 +1500,19 @@ function renderOverview(){
 
   document.getElementById('ledgerTape').innerHTML = `
     <div class="tape-item income"><div class="tlabel">Income (this month)</div><div class="tvalue">${formatMoney(incomeMTD)}</div></div>
-    <div class="tape-item expense"><div class="tlabel">Expenses (this month)</div><div class="tvalue">${formatMoney(expenseMTD)}</div></div>
+    <div class="tape-item expense"><div class="tlabel">Cash expenses (this month)</div><div class="tvalue">${formatMoney(expenseMTD)}</div></div>
   `;
 
   const months = last6MonthKeys();
   const incomeSeries = months.map(k=>incomeForMonth(k));
-  const expenseSeries = months.map(k=>expenseForMonth(k));
+  const expenseSeries = months.map(k=>cashExpenseForMonth(k));
   upsertChart('chartIncomeExpense', {
     type: 'bar',
     data: {
       labels: months.map(monthLabel),
       datasets: [
         { label: 'Income', data: incomeSeries, backgroundColor: '#6fa96c', borderRadius: 4 },
-        { label: 'Expenses (incl. EMIs & investments)', data: expenseSeries, backgroundColor: '#c0574f', borderRadius: 4 }
+        { label: 'Cash expenses (incl. EMIs, investments & card payments)', data: expenseSeries, backgroundColor: '#c0574f', borderRadius: 4 }
       ]
     },
     options: {
@@ -1501,6 +1576,7 @@ function renderNetWorth(){
     <div class="tape-item neutral"><div class="tlabel">Assets</div><div class="tvalue">${formatMoney(totalAssets())}</div></div>
     <div class="tape-item savings"><div class="tlabel">Financial Reserves</div><div class="tvalue">${formatMoney(totalReservesBalance())}</div></div>
     <div class="tape-item loans"><div class="tlabel">Loans remaining</div><div class="tvalue">-${formatMoney(totalLoanRemaining())}</div></div>
+    <div class="tape-item loans"><div class="tlabel">Credit card debt</div><div class="tvalue">-${formatMoney(totalCardOutstanding())}</div></div>
   `;
 
   const months = last6MonthKeys();
@@ -1669,6 +1745,7 @@ document.getElementById('expenseForm').addEventListener('submit', e=>{
     type: f.elements.type.value,
     category: f.elements.category.value.trim(),
     amount: parseFloat(f.elements.amount.value)||0,
+    paymentMethod: f.elements.paymentMethod.value || 'income',
     notes: f.elements.notes.value.trim()
   };
   if(editingExpenseId){
@@ -1683,7 +1760,7 @@ document.getElementById('expenseForm').addEventListener('submit', e=>{
   resetExpenseFormState();
   selectedExpenseYear = Number(entryDate.slice(0,4));
   selectedExpenseMonth = monthKey(entryDate) || currentMonthKey();
-  renderExpenses(); renderBudgets(); renderOverview();
+  renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth(); renderCreditCards(); renderSavings();
   primeDateInput('expenseForm', selectedExpenseMonth);
 });
 function resetExpenseFormState(){
@@ -1714,19 +1791,27 @@ function renderExpenses(){
     m => data.expenses.some(e=>monthKey(e.date)===m) || autoExpenseEntries(m).length>0,
     m => { selectedExpenseMonth = m; renderExpenses(); primeDateInput('expenseForm', m); }
   );
+  refreshPaymentMethodOptions();
 
   const tbody = document.querySelector('#expenseTable tbody');
   const manualRows = data.expenses.filter(e=>monthKey(e.date)===mKey);
   const autoRows = autoExpenseEntries(mKey);
   const rows = [...manualRows, ...autoRows].sort((a,b)=> b.date.localeCompare(a.date));
+  function paidViaLabel(r){
+    if(r.auto) return '—';
+    if(!r.paymentMethod || r.paymentMethod==='income') return 'Income';
+    const card = data.creditCards.find(c=>c.id===r.paymentMethod);
+    return card ? escapeHtml(card.name) : 'Income';
+  }
   if(rows.length===0){
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty">No expenses logged for ${monthLabel(mKey)} yet. Add an entry above.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty">No expenses logged for ${monthLabel(mKey)} yet. Add an entry above.</div></td></tr>`;
   }else{
     tbody.innerHTML = rows.map(r=>`
       <tr>
         <td>${r.date}</td>
         <td><span class="tag ${r.auto ? 'auto' : r.type}">${r.auto ? 'auto' : r.type}</span></td>
         <td>${escapeHtml(r.category)}</td>
+        <td>${paidViaLabel(r)}</td>
         <td>${escapeHtml(r.notes||'')}</td>
         <td class="num">${formatMoney(r.amount)}</td>
         <td>${r.auto ? `<span class="auto-hint">via ${r.autoTab === 'loans' ? 'Loans' : r.autoTab === 'reserves' ? 'Financial Reserves' : 'Investments'}</span>` : `<button class="rowedit" data-edit-expense="${r.id}">Edit</button> <button class="rowdel" data-del-expense="${r.id}">Delete</button>`}</td>
@@ -1737,12 +1822,14 @@ function renderExpenses(){
   const variableMonth = sumBy(rows.filter(e=>e.type==='variable'), e=>e.amount);
   const totalMonth = fixedMonth + variableMonth;
   const autoTotal = sumBy(autoRows, e=>e.amount);
+  const cardTotal = sumBy(manualRows.filter(e=>e.paymentMethod && e.paymentMethod!=='income'), e=>e.amount);
   document.getElementById('expenseSummary').innerHTML = `
     <div class="ledger-tape">
       <div class="tape-item invest"><div class="tlabel">Fixed (incl. EMIs/investments)</div><div class="tvalue">${formatMoney(fixedMonth)}</div></div>
       <div class="tape-item savings"><div class="tlabel">Variable</div><div class="tvalue">${formatMoney(variableMonth)}</div></div>
-      <div class="tape-item expense"><div class="tlabel">Total — ${monthLabel(mKey)}</div><div class="tvalue">${formatMoney(totalMonth)}</div></div>
+      <div class="tape-item expense"><div class="tlabel">Total spend — ${monthLabel(mKey)}</div><div class="tvalue">${formatMoney(totalMonth)}</div></div>
     </div>
+    ${cardTotal>0 ? `<p style="font-size:11px; color:var(--text-muted); margin:10px 2px 0;">Includes ${formatMoney(cardTotal)} paid via credit card — not yet debited from your Balance until you log the card payment.</p>` : ''}
   `;
   document.getElementById('expenseRowCount').textContent = rows.length + (rows.length===1 ? ' entry' : ' entries') + (autoTotal>0 ? ` (${formatMoney(autoTotal)} automatic)` : '');
   document.getElementById('expenseMonthTotal').textContent = formatMoney(totalMonth);
@@ -1784,7 +1871,7 @@ document.querySelector('#expenseTable tbody').addEventListener('click', e=>{
   if(delId){
     data.expenses = data.expenses.filter(x=>x.id!==delId);
     if(editingExpenseId===delId){ document.getElementById('expenseForm').reset(); resetExpenseFormState(); }
-    saveData(); renderExpenses(); renderBudgets(); renderOverview();
+    saveData(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth(); renderCreditCards(); renderSavings();
   }else if(editId){
     const entry = data.expenses.find(x=>x.id===editId);
     if(!entry) return;
@@ -1794,6 +1881,8 @@ document.querySelector('#expenseTable tbody').addEventListener('click', e=>{
     f.elements.type.value = entry.type;
     f.elements.category.value = entry.category;
     f.elements.amount.value = entry.amount;
+    refreshPaymentMethodOptions();
+    f.elements.paymentMethod.value = entry.paymentMethod || 'income';
     f.elements.notes.value = entry.notes||'';
     document.getElementById('expenseSubmitBtn').textContent = 'Save changes';
     document.getElementById('expenseCancelEdit').style.display = 'inline-block';
@@ -2240,7 +2329,7 @@ document.getElementById('loanForm').addEventListener('submit', e=>{
   saveData();
   f.reset();
   resetLoanFormState();
-  renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
+  renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth(); renderSavings();
 });
 function resetLoanFormState(){
   editingLoanId = null;
@@ -2346,7 +2435,7 @@ function renderLoans(){
       }else{
         loan.repayments.push({ id: uid(), ...payload });
       }
-      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
+      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth(); renderSavings();
     });
   });
   wrap.querySelectorAll('[data-repay-cancel]').forEach(btn=>{
@@ -2378,7 +2467,7 @@ function renderLoans(){
       const loan = data.loans.find(l=>l.id===loanId);
       loan.repayments = loan.repayments.filter(r=>r.id!==repayId);
       if(editingRepayment && editingRepayment.loanId===loanId && editingRepayment.repayId===repayId) editingRepayment = null;
-      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
+      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth(); renderSavings();
     });
   });
   wrap.querySelectorAll('[data-edit-loan]').forEach(btn=>{
@@ -2401,7 +2490,7 @@ function renderLoans(){
       if(!confirm('Delete this loan and all its repayment history?')) return;
       data.loans = data.loans.filter(l=>l.id!==btn.dataset.delLoan);
       if(editingLoanId===btn.dataset.delLoan){ document.getElementById('loanForm').reset(); resetLoanFormState(); }
-      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth();
+      saveData(); renderLoans(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth(); renderSavings();
     });
   });
 }
@@ -2499,6 +2588,190 @@ function renderBudgets(){
       document.getElementById('budgetSubmitBtn').textContent = 'Save changes';
       document.getElementById('budgetCancelEdit').style.display = 'inline-block';
       smoothScrollTo(f);
+    });
+  });
+}
+
+/* ---------------- Credit Cards ---------------- */
+document.getElementById('cardForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const f = e.target;
+  const payload = {
+    name: f.elements.name.value.trim(),
+    limit: parseFloat(f.elements.limit.value)||0
+  };
+  if(editingCardId){
+    const card = data.creditCards.find(c=>c.id===editingCardId);
+    if(card) Object.assign(card, payload);
+    editingCardId = null;
+  }else{
+    data.creditCards.push({ id: uid(), ...payload, payments: [] });
+  }
+  saveData();
+  f.reset();
+  resetCardFormState();
+  renderCreditCards(); renderExpenses(); renderOverview(); renderNetWorth(); renderSavings();
+});
+function resetCardFormState(){
+  editingCardId = null;
+  document.getElementById('cardSubmitBtn').textContent = 'Add card';
+  document.getElementById('cardCancelEdit').style.display = 'none';
+}
+document.getElementById('cardCancelEdit').addEventListener('click', ()=>{
+  document.getElementById('cardForm').reset();
+  resetCardFormState();
+});
+
+function renderCreditCards(){
+  const totalOutstanding = totalCardOutstanding();
+  const summaryEl = document.getElementById('creditCardsSummary');
+  if(data.creditCards.length===0){
+    summaryEl.innerHTML = '';
+  }else{
+    summaryEl.innerHTML = `
+      <div class="ledger-tape">
+        <div class="tape-item loans"><div class="tlabel">Total outstanding (all cards)</div><div class="tvalue">${formatMoney(totalOutstanding)}</div></div>
+      </div>
+    `;
+  }
+
+  const wrap = document.getElementById('cardsList');
+  if(data.creditCards.length===0){
+    wrap.innerHTML = `<div class="empty">No cards added yet. Add one above, then choose it as "Paid via" when logging an expense.</div>`;
+    return;
+  }
+  wrap.innerHTML = data.creditCards.map(card=>{
+    const outstanding = cardOutstanding(card);
+    const pct = card.limit>0 ? Math.min(100, (outstanding/card.limit)*100) : 0;
+    const rows = [...(card.payments||[])].sort((a,b)=>b.date.localeCompare(a.date));
+    const rowsHtml = rows.length===0
+      ? `<div class="empty">No payments logged yet.</div>`
+      : `<table>
+          <thead><tr><th>Date</th><th>Notes</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
+          <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td>${r.date}</td>
+              <td>${escapeHtml(r.notes||'')}</td>
+              <td class="num">${formatMoney(r.amount)}</td>
+              <td><button class="rowedit" data-edit-cardpay="${card.id}:${r.id}">Edit</button> <button class="rowdel" data-del-cardpay="${card.id}:${r.id}">Delete</button></td>
+            </tr>
+          `).join('')}
+          </tbody>
+        </table>`;
+
+    return `
+      <div class="loan-card">
+        <div class="loan-head">
+          <div>
+            <h3>${escapeHtml(card.name)}</h3>
+            <div class="loan-meta">${card.limit ? 'Limit ' + formatMoney(card.limit) : 'No limit set'}</div>
+          </div>
+          <div class="loan-figures">
+            <div class="rem">${formatMoney(outstanding)}</div>
+            <div class="lbl">outstanding${card.limit ? ' of ' + formatMoney(card.limit) : ''}</div>
+          </div>
+          <button class="loan-del" data-edit-card="${card.id}" style="border-color:var(--teal-dim); color:var(--teal);">Edit card</button>
+          <button class="loan-del" data-del-card="${card.id}">Delete card</button>
+        </div>
+        ${card.limit ? `<div class="progress-track"><div class="progress-fill ${pct>=90?'red':'gold'}" style="width:${pct}%"></div></div>` : ''}
+
+        <form class="form-row" data-cardpay-form="${card.id}" style="margin-top:16px;">
+          <div class="field"><label>Date</label><input type="date" name="date" required></div>
+          <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
+          <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
+          <button class="btn" type="submit" data-cardpay-submit="${card.id}">Log payment</button>
+          <button class="btn secondary" type="button" data-cardpay-cancel="${card.id}" style="display:none;">Cancel edit</button>
+        </form>
+
+        <div class="table-wrap" style="margin-top:14px; padding: 4px 12px;">${rowsHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  function resetCardPayFormState(cardId){
+    if(editingCardPayment && editingCardPayment.cardId===cardId) editingCardPayment = null;
+    const submitBtn = wrap.querySelector(`[data-cardpay-submit="${cardId}"]`);
+    const cancelBtn = wrap.querySelector(`[data-cardpay-cancel="${cardId}"]`);
+    if(submitBtn) submitBtn.textContent = 'Log payment';
+    if(cancelBtn) cancelBtn.style.display = 'none';
+  }
+
+  wrap.querySelectorAll('[data-cardpay-form]').forEach(form=>{
+    form.addEventListener('submit', e=>{
+      e.preventDefault();
+      const cardId = form.dataset.cardpayForm;
+      const f = e.target;
+      const card = data.creditCards.find(c=>c.id===cardId);
+      const payload = { date: f.elements.date.value, amount: parseFloat(f.elements.amount.value)||0, notes: f.elements.notes.value.trim() };
+      if(editingCardPayment && editingCardPayment.cardId===cardId){
+        const pay = card.payments.find(p=>p.id===editingCardPayment.paymentId);
+        if(pay) Object.assign(pay, payload);
+        editingCardPayment = null;
+      }else{
+        card.payments.push({ id: uid(), ...payload });
+      }
+      saveData(); renderCreditCards(); renderOverview(); renderNetWorth(); renderSavings();
+    });
+  });
+  wrap.querySelectorAll('[data-cardpay-cancel]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      resetCardPayFormState(btn.dataset.cardpayCancel);
+      const form = wrap.querySelector(`[data-cardpay-form="${btn.dataset.cardpayCancel}"]`);
+      if(form) form.reset();
+    });
+  });
+  wrap.querySelectorAll('[data-edit-cardpay]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [cardId, paymentId] = btn.dataset.editCardpay.split(':');
+      const card = data.creditCards.find(c=>c.id===cardId);
+      const pay = card && card.payments.find(p=>p.id===paymentId);
+      if(!pay) return;
+      editingCardPayment = { cardId, paymentId };
+      const form = wrap.querySelector(`[data-cardpay-form="${cardId}"]`);
+      form.elements.date.value = pay.date;
+      form.elements.amount.value = pay.amount;
+      form.elements.notes.value = pay.notes||'';
+      wrap.querySelector(`[data-cardpay-submit="${cardId}"]`).textContent = 'Save changes';
+      wrap.querySelector(`[data-cardpay-cancel="${cardId}"]`).style.display = 'inline-block';
+      smoothScrollTo(form);
+    });
+  });
+  wrap.querySelectorAll('[data-del-cardpay]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [cardId, paymentId] = btn.dataset.delCardpay.split(':');
+      const card = data.creditCards.find(c=>c.id===cardId);
+      card.payments = card.payments.filter(p=>p.id!==paymentId);
+      if(editingCardPayment && editingCardPayment.cardId===cardId && editingCardPayment.paymentId===paymentId) editingCardPayment = null;
+      saveData(); renderCreditCards(); renderOverview(); renderNetWorth(); renderSavings();
+    });
+  });
+  wrap.querySelectorAll('[data-edit-card]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const card = data.creditCards.find(c=>c.id===btn.dataset.editCard);
+      if(!card) return;
+      editingCardId = card.id;
+      const f = document.getElementById('cardForm');
+      f.elements.name.value = card.name;
+      f.elements.limit.value = card.limit||'';
+      document.getElementById('cardSubmitBtn').textContent = 'Save changes';
+      document.getElementById('cardCancelEdit').style.display = 'inline-block';
+      smoothScrollTo(f);
+    });
+  });
+  wrap.querySelectorAll('[data-del-card]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const card = data.creditCards.find(c=>c.id===btn.dataset.delCard);
+      if(!card) return;
+      const outstanding = cardOutstanding(card);
+      const msg = outstanding>0
+        ? `This card has ${formatMoney(outstanding)} outstanding. Deleting it will re-tag its expenses as "Income / Cash" so nothing vanishes from your records, and that amount will debit your Balance immediately instead. Continue?`
+        : 'Delete this card and its payment history?';
+      if(!confirm(msg)) return;
+      data.expenses.forEach(e=>{ if(e.paymentMethod===card.id) e.paymentMethod = 'income'; });
+      data.creditCards = data.creditCards.filter(c=>c.id!==card.id);
+      if(editingCardId===card.id){ document.getElementById('cardForm').reset(); resetCardFormState(); }
+      saveData(); renderCreditCards(); renderExpenses(); renderBudgets(); renderOverview(); renderNetWorth(); renderSavings();
     });
   });
 }
@@ -2747,8 +3020,11 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
       data.income.push(...(parsed.income||[]));
       data.expenses.push(...(parsed.expenses||[]));
       data.investments.push(...(parsed.investments||[]));
+      data.investmentValuations.push(...(parsed.investmentValuations||[]));
       data.assets.push(...(parsed.assets||[]));
       data.loans.push(...(parsed.loans||[]));
+      data.budgets.push(...(parsed.budgets||[]));
+      data.creditCards.push(...(parsed.creditCards||[]));
       const incomingReserves = migrateReserves(parsed);
       data.reserves.entries.push(...incomingReserves.entries);
       if(!data.reserves.target && incomingReserves.target) data.reserves.target = incomingReserves.target;
@@ -2781,6 +3057,7 @@ function renderAll(){
   renderSavings();
   renderLoans();
   renderBudgets();
+  renderCreditCards();
   renderNetWorth();
 }
 
