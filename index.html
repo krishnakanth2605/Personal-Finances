@@ -788,7 +788,7 @@ window.addEventListener('error', function(e){
           <label>Instrument</label>
           <input type="text" name="instrument" list="investCategories" placeholder="SIP" required>
           <datalist id="investCategories">
-            <option value="SIP"><option value="Mutual Fund"><option value="Stocks"><option value="Gold">
+            <option value="SIP"><option value="Mutual Fund"><option value="Stocks"><option value="Gold"><option value="Silver">
             <option value="Fixed Deposit"><option value="PPF / Retirement"><option value="Crypto"><option value="Other">
           </datalist>
         </div>
@@ -866,7 +866,7 @@ window.addEventListener('error', function(e){
           <label>Category</label>
           <input type="text" name="category" list="assetCategories" placeholder="Gold" required>
           <datalist id="assetCategories">
-            <option value="Gold"><option value="Property"><option value="Vehicle"><option value="Jewelry">
+            <option value="Gold"><option value="Silver"><option value="Cash"><option value="Property"><option value="Vehicle"><option value="Jewelry">
             <option value="Electronics"><option value="Collectibles"><option value="Other">
           </datalist>
         </div>
@@ -910,7 +910,7 @@ window.addEventListener('error', function(e){
     <!-- LOANS -->
     <section class="tab" id="tab-loans">
       <h2 class="tabtitle">Loans</h2>
-      <p class="tabdesc">Track opening balances and repayments across every loan you're paying down. Each repayment (EMI) is added to that month's Expenses automatically and reduces what you owe toward Net Worth.</p>
+      <p class="tabdesc">Track opening balances and repayments across every loan you're paying down. Each repayment shows as one EMI expense automatically — split it into Principal and Interest and only the Principal reduces what you owe toward Net Worth.</p>
 
       <div class="tab-summary" id="loansSummary"></div>
 
@@ -1187,9 +1187,24 @@ function monthsForYear(year){
 // Loan balance is simply opening balance minus repayments logged to date —
 // no interest accrual. Interest/principal handling is left to you, as
 // requested; this only tracks what you've told it was repaid.
+//
+// A repayment can carry an explicit principal/interest split (you enter
+// both when logging it). Only the principal portion reduces what you owe;
+// the interest is real money spent but not debt paid down. Older entries
+// logged before this split existed only have a plain `amount` — those are
+// treated as 100% principal, matching how they behaved before this feature.
+function repaymentPrincipal(r){
+  return r.principal!=null ? (Number(r.principal)||0) : (Number(r.amount)||0);
+}
+function repaymentInterest(r){
+  return Number(r.interest)||0;
+}
+function repaymentTotal(r){
+  return repaymentPrincipal(r) + repaymentInterest(r);
+}
 function loanRemainingAt(loan, asOfDateStr){
   if(!loan.start || loan.start > asOfDateStr) return Math.max(0, Number(loan.opening)||0);
-  const paidToDate = sumBy((loan.repayments||[]).filter(r=>r.date<=asOfDateStr), r=>r.amount);
+  const paidToDate = sumBy((loan.repayments||[]).filter(r=>r.date<=asOfDateStr), r=>repaymentPrincipal(r));
   return Math.max(0, (Number(loan.opening)||0) - paidToDate);
 }
 // "Current" figures use end-of-this-month as the cutoff (not literal today),
@@ -1204,7 +1219,7 @@ function totalLoanRemaining(){
   return sumBy(data.loans, l=>loanRemaining(l));
 }
 function totalLoanRepaidActual(){
-  return sumBy(data.loans.flatMap(l=>l.repayments||[]), r=>r.amount);
+  return sumBy(data.loans.flatMap(l=>l.repayments||[]), r=>repaymentTotal(r));
 }
 // Credit cards: an expense tagged to a card doesn't touch cash/Balance when
 // logged — it adds to that card's outstanding balance instead. Only logging
@@ -1300,7 +1315,7 @@ function autoExpenseEntries(mKey){
         loanEntries.push({
           id: 'auto-loan-'+r.id, date: r.date, type: 'fixed',
           category: 'EMI — ' + (l.name || 'Loan'),
-          notes: r.notes || '', amount: r.amount, auto: true, autoTab: 'loans'
+          notes: r.notes || '', amount: repaymentTotal(r), auto: true, autoTab: 'loans'
         });
       }
     });
@@ -1335,7 +1350,7 @@ function cashExpenseForMonth(mKey){
 // only the payment against the card is, to avoid double-counting.
 function essentialExpenseForMonth(mKey){
   const cashManual = sumBy(data.expenses.filter(e=>monthKey(e.date)===mKey && (!e.paymentMethod||e.paymentMethod==='income')), e=>e.amount);
-  const emis = sumBy(data.loans.flatMap(l=>l.repayments||[]).filter(r=>monthKey(r.date)===mKey), r=>r.amount);
+  const emis = sumBy(data.loans.flatMap(l=>l.repayments||[]).filter(r=>monthKey(r.date)===mKey), r=>repaymentTotal(r));
   const cardPayments = sumBy(data.creditCards.flatMap(c=>c.payments||[]).filter(p=>monthKey(p.date)===mKey), p=>p.amount);
   return cashManual + emis + cardPayments;
 }
@@ -1380,7 +1395,7 @@ function cashBalanceThrough(mKey){
   const investedToDate = sumBy(data.investments.filter(i=>i.date<=monthEnd), i=>i.amount);
   const repaidToDate = sumBy(
     data.loans.flatMap(l=>l.repayments||[]).filter(r=>r.date<=monthEnd),
-    r=>r.amount
+    r=>repaymentTotal(r)
   );
   const reserveDepositsToDate = sumBy(
     data.reserves.entries.filter(e=>e.kind!=='withdraw' && e.date<=monthEnd), e=>e.amount
@@ -2344,7 +2359,8 @@ document.getElementById('loanCancelEdit').addEventListener('click', ()=>{
 function renderLoans(){
   const totalOpening = sumBy(data.loans, l=>l.opening);
   const totalRemaining = totalLoanRemaining();
-  const totalPaid = totalOpening - totalRemaining;
+  const totalPrincipalPaid = totalOpening - totalRemaining;
+  const totalInterestPaid = sumBy(data.loans.flatMap(l=>l.repayments||[]), r=>repaymentInterest(r));
   const summaryEl = document.getElementById('loansSummary');
   if(data.loans.length===0){
     summaryEl.innerHTML = '';
@@ -2352,7 +2368,8 @@ function renderLoans(){
     summaryEl.innerHTML = `
       <div class="ledger-tape">
         <div class="tape-item neutral"><div class="tlabel">Total opening balance</div><div class="tvalue">${formatMoney(totalOpening)}</div></div>
-        <div class="tape-item savings"><div class="tlabel">Total repaid</div><div class="tvalue">${formatMoney(totalPaid)}</div></div>
+        <div class="tape-item savings"><div class="tlabel">Principal repaid</div><div class="tvalue">${formatMoney(totalPrincipalPaid)}</div></div>
+        <div class="tape-item expense"><div class="tlabel">Interest paid</div><div class="tvalue">${formatMoney(totalInterestPaid)}</div></div>
         <div class="tape-item loans"><div class="tlabel">Total remaining</div><div class="tvalue">${formatMoney(totalRemaining)}</div></div>
       </div>
     `;
@@ -2371,13 +2388,15 @@ function renderLoans(){
     const rowsHtml = rows.length===0
       ? `<div class="empty">No repayments logged yet.</div>`
       : `<table>
-          <thead><tr><th>Date</th><th>Notes</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
+          <thead><tr><th>Date</th><th>Principal</th><th>Interest</th><th>Notes</th><th style="text-align:right;">Total</th><th></th></tr></thead>
           <tbody>
           ${rows.map(r=>`
             <tr>
               <td>${r.date}</td>
+              <td class="num">${formatMoney(repaymentPrincipal(r))}</td>
+              <td class="num">${formatMoney(repaymentInterest(r))}</td>
               <td>${escapeHtml(r.notes||'')}</td>
-              <td class="num">${formatMoney(r.amount)}</td>
+              <td class="num">${formatMoney(repaymentTotal(r))}</td>
               <td><button class="rowedit" data-edit-repay="${loan.id}:${r.id}">Edit</button> <button class="rowdel" data-del-repay="${loan.id}:${r.id}">Delete</button></td>
             </tr>
           `).join('')}
@@ -2402,16 +2421,30 @@ function renderLoans(){
 
         <form class="form-row" data-repay-form="${loan.id}" style="margin-top:16px;">
           <div class="field"><label>Date</label><input type="date" name="date" required></div>
-          <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required></div>
+          <div class="field"><label>Principal</label><input type="number" name="principal" step="0.01" min="0" placeholder="0.00" required class="repay-split-input" data-loan="${loan.id}"></div>
+          <div class="field"><label>Interest <span style="opacity:.6;">(optional)</span></label><input type="number" name="interest" step="0.01" min="0" placeholder="0.00" class="repay-split-input" data-loan="${loan.id}"></div>
           <div class="field"><label>Notes</label><input type="text" name="notes" placeholder="Optional"></div>
           <button class="btn" type="submit" data-repay-submit="${loan.id}">Log repayment</button>
           <button class="btn secondary" type="button" data-repay-cancel="${loan.id}" style="display:none;">Cancel edit</button>
         </form>
+        <div style="font-size:11.5px; color:var(--text-muted); margin-top:8px;">Total EMI: <b id="repayTotal-${loan.id}" style="color:var(--text);">${formatMoney(0)}</b> — shows as one Expense entry; only Principal reduces what's remaining above.</div>
 
         <div class="table-wrap" style="margin-top:14px; padding: 4px 12px;">${rowsHtml}</div>
       </div>
     `;
   }).join('');
+
+  wrap.querySelectorAll('.repay-split-input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const loanId = inp.dataset.loan;
+      const form = wrap.querySelector(`[data-repay-form="${loanId}"]`);
+      const hint = document.getElementById('repayTotal-'+loanId);
+      if(!form || !hint) return;
+      const p = parseFloat(form.elements.principal.value)||0;
+      const i = parseFloat(form.elements.interest.value)||0;
+      hint.textContent = formatMoney(p+i);
+    });
+  });
 
   function resetRepayFormState(loanId){
     if(editingRepayment && editingRepayment.loanId===loanId) editingRepayment = null;
@@ -2427,7 +2460,12 @@ function renderLoans(){
       const loanId = form.dataset.repayForm;
       const f = e.target;
       const loan = data.loans.find(l=>l.id===loanId);
-      const payload = { date: f.elements.date.value, amount: parseFloat(f.elements.amount.value)||0, notes: f.elements.notes.value.trim() };
+      const payload = {
+        date: f.elements.date.value,
+        principal: parseFloat(f.elements.principal.value)||0,
+        interest: parseFloat(f.elements.interest.value)||0,
+        notes: f.elements.notes.value.trim()
+      };
       if(editingRepayment && editingRepayment.loanId===loanId){
         const rep = loan.repayments.find(r=>r.id===editingRepayment.repayId);
         if(rep) Object.assign(rep, payload);
@@ -2440,9 +2478,12 @@ function renderLoans(){
   });
   wrap.querySelectorAll('[data-repay-cancel]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      resetRepayFormState(btn.dataset.repayCancel);
-      const form = wrap.querySelector(`[data-repay-form="${btn.dataset.repayCancel}"]`);
+      const loanId = btn.dataset.repayCancel;
+      resetRepayFormState(loanId);
+      const form = wrap.querySelector(`[data-repay-form="${loanId}"]`);
       if(form) form.reset();
+      const hint = document.getElementById('repayTotal-'+loanId);
+      if(hint) hint.textContent = formatMoney(0);
     });
   });
   wrap.querySelectorAll('[data-edit-repay]').forEach(btn=>{
@@ -2454,8 +2495,11 @@ function renderLoans(){
       editingRepayment = { loanId, repayId };
       const form = wrap.querySelector(`[data-repay-form="${loanId}"]`);
       form.elements.date.value = rep.date;
-      form.elements.amount.value = rep.amount;
+      form.elements.principal.value = repaymentPrincipal(rep);
+      form.elements.interest.value = repaymentInterest(rep) || '';
       form.elements.notes.value = rep.notes||'';
+      const hint = document.getElementById('repayTotal-'+loanId);
+      if(hint) hint.textContent = formatMoney(repaymentTotal(rep));
       wrap.querySelector(`[data-repay-submit="${loanId}"]`).textContent = 'Save changes';
       wrap.querySelector(`[data-repay-cancel="${loanId}"]`).style.display = 'inline-block';
       smoothScrollTo(form);
